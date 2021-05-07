@@ -29,3 +29,7 @@ demo/*
 # ignore files for proj 1
 *.db
 *.exe
+
+# ignore files for proj 6
+your_output/
+data/
