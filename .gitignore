@@ -25,3 +25,7 @@ target/*
 hw*.zip
 *.zip
 demo/*
+
+# ignore files for proj 1
+*.db
+*.exe
