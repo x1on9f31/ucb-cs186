@@ -26,3 +26,6 @@ hw*.zip
 
 # ignore unzipped dataset
 lahman.db
+
+# ignore executable files
+*.exe
