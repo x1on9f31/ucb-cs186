@@ -33,6 +33,7 @@ AS
 -- Question 1ii
 -- 本题可以使用`LIKE`, 即 `WHERE namefirst like '% %'` --case-insensitive
 -- 使用`LIKE`需要注意如果搜索的字符包含`%`,就需要特别处理
+-- 也可使用正则表达式`WHERE namefirst ~ '.*\s.*`; 此处存疑，SQLite不支持正则表达式匹配
 -- 更通用的方式是使用`instr`, 不需要考虑搜索的字符串中包含`%`等特殊字符的情况
 -- 注意：`instr`在SQLite 3.7.15及其之后的版本才被支持
 CREATE VIEW q1ii(namefirst, namelast, birthyear)
