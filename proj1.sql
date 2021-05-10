@@ -47,26 +47,49 @@ AS
 -- Question 1iii
 CREATE VIEW q1iii(birthyear, avgheight, count)
 AS
-  SELECT 1, 1, 1 -- replace this line
+  SELECT birthyear,
+         AVG(height),
+         COUNT(*)
+  FROM people
+  GROUP BY birthyear
+  ORDER BY birthyear
 ;
 
 -- Question 1iv
 CREATE VIEW q1iv(birthyear, avgheight, count)
 AS
-  SELECT 1, 1, 1 -- replace this line
+  SELECT *
+  FROM q1iii
+  WHERE avgheight > 70
+  ORDER BY birthyear
 ;
 
 -- Question 2i
 CREATE VIEW q2i(namefirst, namelast, playerid, yearid)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
+  SELECT p.namefirst, p.namelast, p.playerid, h.yearid
+  FROM people as p, halloffame as h
+  WHERE (p.playerid = h.playerid) AND h.inducted = 'Y'
+  ORDER BY h.yearid DESC, p.playerid
 ;
 
 -- Question 2ii
 CREATE VIEW q2ii(namefirst, namelast, playerid, schoolid, yearid)
 AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
-;
+SELECT  q2i.namefirst 
+       ,q2i.namelast 
+       ,q2i.playerid 
+       ,q2i.yearid
+       , 1
+FROM q2i
+WHERE q2i.playerid IN ( 
+                        SELECT CollegePlaying.playerid 
+                        FROM CollegePlaying 
+                        WHERE CollegePlaying.schoolid IN 
+                                      (SELECT Schools.schoolid 
+                                      FROM Schools 
+                                      WHERE Schools.schoolState = 'CA'))
+ORDER BY q2i.yearid DESC, q2i.playerid ;                                                                 
 
 -- Question 2iii
 CREATE VIEW q2iii(playerid, namefirst, namelast, schoolid)
