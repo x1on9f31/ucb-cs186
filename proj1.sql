@@ -89,10 +89,16 @@ ORDER BY q2i.yearid DESC, q2i.playerid
 ;                                                              
 
 -- Question 2iii
-CREATE VIEW q2iii(playerid, namefirst, namelast, schoolid)
-AS
-  SELECT 1, 1, 1, 1 -- replace this line
-;
+CREATE VIEW q2iii(playerid, namefirst, namelast, schoolid) AS
+SELECT  q2i.playerid
+       ,q2i.namefirst
+       ,q2i.namelast
+       ,CollegePlaying.schoolid
+FROM q2i
+LEFT OUTER JOIN CollegePlaying
+ON q2i.playerid = CollegePlaying.playerid
+ORDER BY q2i.playerid DESC, schoolid 
+; 
 
 -- Question 3i
 CREATE VIEW q3i(playerid, namefirst, namelast, yearid, slg)
