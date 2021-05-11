@@ -64,29 +64,50 @@ ORDER BY birthyear
 ; 
 
 -- Question 2i
+-- CREATE VIEW q2i(namefirst, namelast, playerid, yearid) AS
+-- SELECT  p.namefirst
+--        ,p.namelast
+--        ,p.playerid
+--        ,h.yearid
+-- FROM people AS p, halloffame AS h
+-- WHERE (p.playerid = h.playerid) 
+-- AND h.inducted = 'Y'
+-- ORDER BY h.yearid DESC, p.playerid 
+-- ; 
 CREATE VIEW q2i(namefirst, namelast, playerid, yearid) AS
 SELECT  p.namefirst
        ,p.namelast
        ,p.playerid
        ,h.yearid
 FROM people AS p, halloffame AS h
-WHERE (p.playerid = h.playerid) 
+WHERE (p.playerID = h.playerID) 
 AND h.inducted = 'Y'
-ORDER BY h.yearid DESC, p.playerid 
-; 
+ORDER BY h.yearid DESC, p.playerID; 
 
 -- Question 2ii
+-- CREATE VIEW q2ii(namefirst, namelast, playerid, schoolid, yearid) AS
+-- SELECT  q2i.namefirst 
+--        ,q2i.namelast 
+--        ,q2i.playerid 
+--        ,CollegePlaying.schoolid 
+--        ,q2i.yearid
+-- FROM q2i, CollegePlaying
+-- WHERE (CollegePlaying.playerid = q2i.playerid) 
+-- AND CollegePlaying.schoolid IN ( SELECT Schools.schoolid FROM Schools WHERE Schools.schoolState = 'CA')
+-- ORDER BY q2i.yearid DESC, q2i.playerid 
+-- ;                                                              
+
 CREATE VIEW q2ii(namefirst, namelast, playerid, schoolid, yearid) AS
 SELECT  q2i.namefirst 
        ,q2i.namelast 
        ,q2i.playerid 
-       ,CollegePlaying.schoolid 
+       ,collegeplaying.schoolid 
        ,q2i.yearid
-FROM q2i, CollegePlaying
-WHERE (CollegePlaying.playerid = q2i.playerid) 
-AND CollegePlaying.schoolid IN ( SELECT Schools.schoolid FROM Schools WHERE Schools.schoolState = 'CA')
-ORDER BY q2i.yearid DESC, q2i.playerid 
-;                                                              
+FROM q2i, collegeplaying, schools
+WHERE q2i.playerid = collegeplaying.playerid 
+AND collegeplaying.schoolID = Schools.schoolid 
+AND schools.schoolState = 'CA'
+ORDER BY q2i.yearid DESC, q2i.playerid;  
 
 -- Question 2iii
 CREATE VIEW q2iii(playerid, namefirst, namelast, schoolid) AS
