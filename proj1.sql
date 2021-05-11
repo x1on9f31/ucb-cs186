@@ -18,17 +18,18 @@ DROP VIEW IF EXISTS q4v;
 
 -- Question 0
 CREATE VIEW q0(era) AS
-  SELECT MAX(era)
-  FROM pitching
+SELECT  MAX(era)
+FROM pitching 
 ;
 
 -- Question 1i
-CREATE VIEW q1i(namefirst, namelast, birthyear)
-AS
-  SELECT namefirst, namelast, birthyear
-  FROM people
-  WHERE people.weight > 300
-;
+CREATE VIEW q1i(namefirst, namelast, birthyear) AS
+SELECT  namefirst
+       ,namelast
+       ,birthyear
+FROM people
+WHERE people.weight > 300 
+; 
 
 -- Question 1ii
 -- 本题可以使用`LIKE`, 即 `WHERE namefirst like '% %'` --case-insensitive
@@ -36,33 +37,31 @@ AS
 -- 也可使用正则表达式`WHERE namefirst ~ '.*\s.*`; 此处存疑，SQLite不支持正则表达式匹配
 -- 更通用的方式是使用`instr`, 不需要考虑搜索的字符串中包含`%`等特殊字符的情况
 -- 注意：`instr`在SQLite 3.7.15及其之后的版本才被支持
-CREATE VIEW q1ii(namefirst, namelast, birthyear)
-AS
-  SELECT namefirst, namelast, birthyear
-  FROM people
-  WHERE instr(namefirst, ' ')
-  ORDER BY namefirst ASC, namelast ASC
-;
+CREATE VIEW q1ii(namefirst, namelast, birthyear) AS
+SELECT  namefirst
+       ,namelast
+       ,birthyear
+FROM people
+WHERE instr(namefirst, ' ')
+ORDER BY namefirst ASC, namelast ASC ; 
 
 -- Question 1iii
-CREATE VIEW q1iii(birthyear, avgheight, count)
-AS
-  SELECT birthyear,
-         AVG(height),
-         COUNT(*)
-  FROM people
-  GROUP BY birthyear
-  ORDER BY birthyear
+CREATE VIEW q1iii(birthyear, avgheight, count) AS
+SELECT  birthyear
+       ,AVG(height)
+       ,COUNT(*)
+FROM people
+GROUP BY  birthyear
+ORDER BY birthyear 
 ;
 
 -- Question 1iv
-CREATE VIEW q1iv(birthyear, avgheight, count)
-AS
-  SELECT *
-  FROM q1iii
-  WHERE avgheight > 70
-  ORDER BY birthyear
-;
+CREATE VIEW q1iv(birthyear, avgheight, count) AS
+SELECT  *
+FROM q1iii
+WHERE avgheight > 70
+ORDER BY birthyear 
+; 
 
 -- Question 2i
 CREATE VIEW q2i(namefirst, namelast, playerid, yearid) AS
