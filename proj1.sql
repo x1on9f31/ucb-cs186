@@ -140,10 +140,14 @@ AS
 ;
 
 -- Question 4i
-CREATE VIEW q4i(yearid, min, max, avg)
-AS
-  SELECT 1, 1, 1, 1 -- replace this line
-;
+CREATE VIEW q4i(yearid, min, max, avg) AS
+SELECT  yearid
+       ,MIN(s.salary)
+       ,MAX(s.salary)
+       ,AVG(s.salary)
+FROM Salaries AS s
+GROUP BY  yearid
+ORDER BY yearid ;
 
 
 -- Helper table for 4ii
@@ -164,10 +168,31 @@ AS
 ;
 
 -- Question 4iv
-CREATE VIEW q4iv(playerid, namefirst, namelast, salary, yearid)
-AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
-;
+CREATE VIEW q4iv(playerid, namefirst, namelast, salary, yearid) AS
+SELECT  p.playerID
+       ,p.namefirst
+       ,p.namelast
+       ,s.salary
+       ,s.yearid
+FROM people AS p, salaries AS s
+WHERE p.playerid = s.playerID 
+AND s.yearid = 2000 
+AND s.salary = ( 
+SELECT  MAX(s2.salary)
+FROM Salaries AS s2
+WHERE s2.yearid = 2000) UNION 
+SELECT  p.playerID
+       ,p.namefirst
+       ,p.namelast
+       ,s.salary
+       ,s.yearid
+FROM people AS p, salaries AS s
+WHERE p.playerid = s.playerID 
+AND s.yearid = 2001 
+AND s.salary = ( 
+SELECT  MAX(s3.salary)
+FROM Salaries AS s3
+WHERE s3.yearid = 2001) ; 
 -- Question 4v
 CREATE VIEW q4v(team, diffAvg) AS
   SELECT 1, 1 -- replace this line
