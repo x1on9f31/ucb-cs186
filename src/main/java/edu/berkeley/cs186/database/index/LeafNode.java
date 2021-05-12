@@ -358,7 +358,7 @@ class LeafNode extends BPlusNode {
 
         ByteBuffer buf = ByteBuffer.allocate(size);
         buf.put((byte) 1);
-        buf.putLong(rightSibling.orElse(-1L));
+        buf.putLong(rightSibling.orElse(-1L)); // orElse(T other)， 如果rightSibling值存在，返回rightSibling，否则返回other
         buf.putInt(keys.size());
         for (int i = 0; i < keys.size(); ++i) {
             buf.put(keys.get(i).toBytes());
@@ -372,12 +372,25 @@ class LeafNode extends BPlusNode {
      */
     public static LeafNode fromBytes(BPlusTreeMetadata metadata, BufferManager bufferManager,
                                      LockContext treeContext, long pageNum) {
-        // TODO(proj2): implement
         // Note: LeafNode has two constructors. To implement fromBytes be sure to
         // use the constructor that reuses an existing page instead of fetching a
         // brand new one.
 
-        return null;
+        Page page = bufferManager.fetchPage(treeContext, pageNum);
+        Buffer buf = page.getBuffer();
+
+        byte nodeType = buf.get();
+        assert(nodeType == (byte) 1);
+
+        List<DataBox> keys = new ArrayList<>();
+        List<RecordId> rids = new ArrayList<>();
+        Optional<Long> rightSibling = Optional.of(buf.getLong());    // get the rightSibling
+        int n = buf.getInt(); // get the number of pairs
+        for (int i = 0; i < n; ++i) {
+            keys.add(DataBox.fromBytes(buf, metadata.getKeySchema()));
+            rids.add(RecordId.fromBytes(buf));
+        }
+        return new LeafNode(metadata, bufferManager, page, keys, rids, rightSibling, treeContext);
     }
 
     // Builtins ////////////////////////////////////////////////////////////////
