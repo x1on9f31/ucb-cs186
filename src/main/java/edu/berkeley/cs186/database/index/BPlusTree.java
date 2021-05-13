@@ -146,6 +146,8 @@ public class BPlusTree {
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
         // TODO(proj2): implement
+        // BPlusTree类中的get方法发起调用，InnerNode中的get是recursive case
+        // LeafNode中的get是base case
         // root是一个LeafNode，其get()函数返回一个LeafNode或null？
         // LeafNode可以使用getKey方法取得key对应的RecordId，返回格式为Optional<RecordId>
         if (this.root.get(key) != null) {
