@@ -144,7 +144,6 @@ SELECT  people.playerID
 FROM people, Batting
 WHERE people.playerID = Batting.playerID 
 AND Batting.AB > 50
-GROUP BY Batting.yearid
 ORDER BY lslg DESC, people.playerID 
 LIMIT 10 ;
 
