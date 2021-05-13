@@ -122,10 +122,17 @@ ORDER BY q2i.playerid DESC, schoolid
 ; 
 
 -- Question 3i
-CREATE VIEW q3i(playerid, namefirst, namelast, yearid, slg)
-AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
-;
+CREATE VIEW q3i(playerid, namefirst, namelast, yearid, slg) AS
+SELECT  people.playerID
+       ,people.namefirst
+       ,people.namelast
+       ,Batting.yearid
+       ,(CAST(H AS REAL) + CAST(H2B AS REAL) + 2 * CAST(H3B AS REAL) + 3 * CAST(HR AS REAL)) / CAST(AB AS REAL) AS slg
+FROM people, Batting
+WHERE people.playerID = Batting.playerID 
+AND Batting.AB > 50
+ORDER BY slg DESC, Batting.yearid, people.playerID 
+LIMIT 10 ;
 
 -- Question 3ii
 CREATE VIEW q3ii(playerid, namefirst, namelast, lslg)
