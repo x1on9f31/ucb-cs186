@@ -137,8 +137,16 @@ LIMIT 10 ;
 -- Question 3ii
 CREATE VIEW q3ii(playerid, namefirst, namelast, lslg)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
-;
+SELECT  people.playerID
+       ,people.namefirst
+       ,people.namelast
+       ,(CAST(SUM(H) AS REAL) + CAST(SUM(H2B) AS REAL) + 2 * CAST(SUM(H3B) AS REAL) + 3 * CAST(SUM(HR) AS REAL)) / CAST(SUM(AB) AS REAL) AS lslg
+FROM people, Batting
+WHERE people.playerID = Batting.playerID 
+AND Batting.AB > 50
+GROUP BY Batting.yearid
+ORDER BY lslg DESC, people.playerID 
+LIMIT 10 ;
 
 -- Question 3iii
 CREATE VIEW q3iii(namefirst, namelast, lslg)
