@@ -151,10 +151,21 @@ ORDER BY playerLSLG.lslg DESC, people.playerID
 LIMIT 10 ;
 
 -- Question 3iii
-CREATE VIEW q3iii(namefirst, namelast, lslg)
-AS
-  SELECT 1, 1, 1 -- replace this line
-;
+CREATE VIEW q3iii(namefirst, namelast, lslg) AS WITH playerLSLG(playerID, lslg) AS (
+SELECT  playerid 
+       ,(CAST(SUM(H) AS REAL) + CAST(SUM(H2B) AS REAL) + 2 * CAST(SUM(H3B) AS REAL) + 3 * CAST(SUM(HR) AS REAL)) / CAST(SUM(AB) AS REAL) AS lslg
+FROM batting
+GROUP BY  playerID
+HAVING SUM(AB) > 50 )
+SELECT  people.namefirst
+       ,people.namelast
+       ,playerLSLG.lslg
+FROM people, playerLSLG
+WHERE people.playerID = playerLSLG.playerID 
+AND playerLSLG.lslg > ( 
+SELECT  l2.lslg
+FROM playerLSLG AS l2
+WHERE l2.playerID = 'mayswi01') ; 
 
 -- Question 4i
 CREATE VIEW q4i(yearid, min, max, avg) AS
