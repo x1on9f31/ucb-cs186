@@ -221,6 +221,7 @@ AND s.salary = (
 SELECT  MAX(s3.salary)
 FROM Salaries AS s3
 WHERE s3.yearid = 2001) ; 
+
 -- Question 4v
 CREATE VIEW q4v(team, diffAvg) AS
   SELECT 1, 1 -- replace this line
