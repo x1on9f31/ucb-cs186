@@ -135,16 +135,19 @@ ORDER BY slg DESC, Batting.yearid, people.playerID
 LIMIT 10 ;
 
 -- Question 3ii
-CREATE VIEW q3ii(playerid, namefirst, namelast, lslg)
-AS
+CREATE VIEW q3ii(playerid, namefirst, namelast, lslg) AS WITH playerLSLG(playerID, lslg) AS (
+SELECT  playerid
+       ,(CAST(SUM(H) AS REAL) + CAST(SUM(H2B) AS REAL) + 2 * CAST(SUM(H3B) AS REAL) + 3 * CAST(SUM(HR) AS REAL)) / CAST(SUM(AB) AS REAL) AS lslg
+FROM batting
+GROUP BY playerID
+HAVING SUM(AB) > 50 )
 SELECT  people.playerID
        ,people.namefirst
        ,people.namelast
-       ,(CAST(SUM(H) AS REAL) + CAST(SUM(H2B) AS REAL) + 2 * CAST(SUM(H3B) AS REAL) + 3 * CAST(SUM(HR) AS REAL)) / CAST(SUM(AB) AS REAL) AS lslg
-FROM people, Batting
-WHERE people.playerID = Batting.playerID 
-AND Batting.AB > 50
-ORDER BY lslg DESC, people.playerID 
+       ,playerLslg.lslg
+FROM people, playerLslg
+WHERE people.playerID = playerLslg.playerID
+ORDER BY playerLslg.lslg DESC, people.playerID 
 LIMIT 10 ;
 
 -- Question 3iii
