@@ -144,10 +144,10 @@ HAVING SUM(AB) > 50 )
 SELECT  people.playerID
        ,people.namefirst
        ,people.namelast
-       ,playerLslg.lslg
-FROM people, playerLslg
-WHERE people.playerID = playerLslg.playerID
-ORDER BY playerLslg.lslg DESC, people.playerID 
+       ,playerLSLG.lslg
+FROM people, playerLSLG
+WHERE people.playerID = playerLSLG.playerID
+ORDER BY playerLSLG.lslg DESC, people.playerID 
 LIMIT 10 ;
 
 -- Question 3iii
