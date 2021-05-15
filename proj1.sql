@@ -184,23 +184,31 @@ CREATE TABLE binids(binid);
 INSERT INTO binids VALUES (0), (1), (2), (3), (4), (5), (6), (7), (8), (9);
 
 -- Question 4ii
-CREATE VIEW q4ii(binid, low, high, count)
-AS
-WITH RECURSIVE histogram(binid, low, high, width) AS
-    (SELECT 0 AS id, min, min + (max - min)/10, (max - min)/10
-     FROM q4i
-     WHERE yearid = 2016
-    UNION
-     SELECT binid + 1, high, CASE WHEN binid < 8 THEN high + width ELSE high + width + 1 END, width
-     FROM histogram
-     WHERE binid <= 9)
-
-  SELECT binid, low, high, COUNT(*)
-  FROM histogram AS h, Salaries AS s
-  WHERE salary >= low AND salary < high AND yearid = 2016
-  GROUP BY binid, low, high
-  ORDER BY binid
-;
+CREATE VIEW q4ii(binid, low, high, count) AS WITH RECURSIVE histogram(binid, low, high, width) AS (
+SELECT  0 AS id
+       ,min
+       ,min + (max - min)/10
+       ,(max - min)/10
+FROM q4i
+WHERE yearid = 2016 UNION 
+SELECT  binid + 1
+       ,high
+       ,CASE WHEN binid < 8 THEN high + width  ELSE high + width + 1 END
+       ,width
+FROM histogram
+WHERE binid <= 9) 
+SELECT  binid
+       ,low
+       ,high
+       ,COUNT(*)
+FROM histogram AS h, Salaries AS s
+WHERE salary >= low 
+AND salary < high 
+AND yearid = 2016 
+GROUP BY  binid
+         ,low
+         ,high
+ORDER BY binid ;
 
 -- Question 4iii
 -- 现在的做法性能很差，需要优化
@@ -220,12 +228,14 @@ WITH RECURSIVE histogram(binid, low, high, width) AS
 
 -- 优化后
 CREATE VIEW q4iii(yearid, mindiff, maxdiff, avgdiff) AS
-  SELECT cur.yearid, cur.min - pre.min, cur.max - pre.max, cur.avg - pre.avg
-  FROM q4i AS cur
-  INNER JOIN q4i AS pre
-  ON cur.yearid - 1 = pre.yearid
-  ORDER BY cur.yearid
-;
+SELECT  cur.yearid
+       ,cur.min - pre.min
+       ,cur.max - pre.max
+       ,cur.avg - pre.avg
+FROM q4i AS cur
+INNER JOIN q4i AS pre
+ON cur.yearid - 1 = pre.yearid
+ORDER BY cur.yearid ;
 
 -- Question 4iv
 CREATE VIEW q4iv(playerid, namefirst, namelast, salary, yearid) AS
