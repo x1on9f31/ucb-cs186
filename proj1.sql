@@ -232,7 +232,19 @@ FROM Salaries AS s3
 WHERE s3.yearid = 2001) ; 
 
 -- Question 4v
-CREATE VIEW q4v(team, diffAvg) AS
-  SELECT 1, 1 -- replace this line
-;
+CREATE VIEW q4v(team, diffAvg) AS WITH allstar2016(playerid, teamid, salary) AS (
+SELECT  allstarfull.playerID
+       ,allstarfull.teamID
+       ,(
+SELECT  salaries.salary
+FROM salaries
+WHERE salaries.playerID = allstarfull.playerID 
+AND salaries.yearID = 2016) 
+FROM allstarfull
+WHERE yearID = 2016) 
+SELECT  allstar2016.teamid
+       ,(MAX(allstar2016.salary) - MIN(allstar2016.salary)) AS diffAvg
+FROM allstar2016
+GROUP BY  allstar2016.teamid
+ORDER BY teamID ;
 
