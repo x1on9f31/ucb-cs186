@@ -190,10 +190,19 @@ AS
 ;
 
 -- Question 4iii
-CREATE VIEW q4iii(yearid, mindiff, maxdiff, avgdiff)
-AS
-  SELECT 1, 1, 1, 1 -- replace this line
-;
+-- 现在的做法性能很差，需要优化
+CREATE VIEW q4iii(yearid, mindiff, maxdiff, avgdiff) AS
+SELECT  s2.yearid
+       ,(MIN(s2.salary) - MIN(s1.salary)) AS mindiff
+       ,(MAX(s2.salary) - MAX(s1.salary)) AS maxdiff
+       ,(AVG(s2.salary) - AVG(s1.salary)) AS avgdiff
+FROM salaries AS s1, salaries AS s2
+WHERE s2.yearID - s1.yearID = 1 
+AND s1.yearid >= ( 
+SELECT  MIN(yearID)
+FROM salaries)
+GROUP BY  s1.yearid
+ORDER BY s1.yearID ;
 
 -- Question 4iv
 CREATE VIEW q4iv(playerid, namefirst, namelast, salary, yearid) AS
