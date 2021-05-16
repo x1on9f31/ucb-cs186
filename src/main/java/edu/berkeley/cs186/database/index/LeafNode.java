@@ -155,8 +155,9 @@ class LeafNode extends BPlusNode {
     @Override
     public LeafNode getLeftmostLeaf() {
         // TODO(proj2): implement
-
-        return null;
+        // 根据BPlusNode::getLeftmostLeaf的定义，
+        // LeafNode的getLeftmostLeaf应该返回自身
+        return this;
     }
 
     // See BPlusNode.put.
