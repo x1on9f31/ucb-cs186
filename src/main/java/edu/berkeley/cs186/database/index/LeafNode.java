@@ -400,7 +400,7 @@ class LeafNode extends BPlusNode {
         // 不能忘记对buf.getLong()的值进行检查！！
         //
         Long tempSibiling = buf.getLong();
-        Optional<Long> rightSibling = tempSibiling == -1 ? Optional.empty() : Optional.of(tempSibiling);    // get the rightSibling
+        Optional<Long> rightSibling = tempSibiling == -1 ? Optional.empty() : Optional.of(tempSibiling);
         int n = buf.getInt(); // get the number of pairs
         for (int i = 0; i < n; ++i) {
             keys.add(DataBox.fromBytes(buf, metadata.getKeySchema()));
