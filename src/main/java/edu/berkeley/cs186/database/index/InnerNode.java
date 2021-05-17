@@ -137,8 +137,6 @@ class InnerNode extends BPlusNode {
 
         int cursor = numLessThanEqual(key, keys);
         getChild(cursor).remove(key);
-
-        sync();
     }
 
     // Helpers /////////////////////////////////////////////////////////////////
