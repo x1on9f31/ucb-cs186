@@ -398,7 +398,6 @@ class LeafNode extends BPlusNode {
         List<DataBox> keys = new ArrayList<>();
         List<RecordId> rids = new ArrayList<>();
         // 不能忘记对buf.getLong()的值进行检查！！
-        //
         Long tempSibiling = buf.getLong();  // 若返回-1，则说明没有rightSibling
         Optional<Long> rightSibling = tempSibiling == -1 ? Optional.empty() : Optional.of(tempSibiling);
         int n = buf.getInt(); // get the number of pairs
