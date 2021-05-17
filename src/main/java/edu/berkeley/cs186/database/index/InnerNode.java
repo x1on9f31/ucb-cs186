@@ -9,6 +9,7 @@ import edu.berkeley.cs186.database.memory.BufferManager;
 import edu.berkeley.cs186.database.memory.Page;
 import edu.berkeley.cs186.database.table.RecordId;
 
+import javax.xml.crypto.Data;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -81,15 +82,31 @@ class InnerNode extends BPlusNode {
     @Override
     public LeafNode get(DataBox key) {
         // TODO(proj2): implement
-
-        return null;
+//        if (keys.size() < 1) {
+//            return null;
+//        }
+//        int cursor = 0;
+//        for (DataBox k : keys) {
+//            if (key.compareTo(k) < 0) {
+//                break;
+//            }
+//            cursor++;
+//        }
+//        return getChild(cursor).getLeftmostLeaf();
+        int n = keys.size();
+        for (int i = 0; i < n; i++) {
+            if (key.compareTo(keys.get(i)) < 0) {
+                return getChild(i).get(key);
+            }
+        }
+        return getChild(n).get(key);
     }
 
     // See BPlusNode.getLeftmostLeaf.
     @Override
     public LeafNode getLeftmostLeaf() {
         assert(children.size() > 0);
-        // TODO(proj2): implement
+        // (proj2): implement
 
         return getChild(0).getLeftmostLeaf();
     }

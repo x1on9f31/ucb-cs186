@@ -147,8 +147,19 @@ class LeafNode extends BPlusNode {
     @Override
     public LeafNode get(DataBox key) {
         // TODO(proj2): implement
-
-        return null;
+//        if (keys.size() < 1) {
+//            // 空叶节点，直接返回null
+//            return null;
+//        }
+//        for (DataBox k : keys) {
+//            // 遍历查找对应的key，如果找到，返回当前叶节点
+//            if (key.compareTo(k) == 0) {
+//                return this;
+//            }
+//        }
+//        // 遍历完成还没有找到，说明不存在，返回null
+//        return null;
+        return this; // LeafNode::get直接返回自己
     }
 
     // See BPlusNode.getLeftmostLeaf.

@@ -150,12 +150,14 @@ public class BPlusTree {
         // LeafNode中的get是base case
         // root是一个LeafNode，其get()函数返回一个LeafNode或null？
         // LeafNode可以使用getKey方法取得key对应的RecordId，返回格式为Optional<RecordId>
-        if (this.root.get(key) != null) {
-            return this.root.get(key).getKey(key);
-        }
-        else {
+/*        if (root instanceof LeafNode) {
+            return ((LeafNode) root).getKey(key);
+        } else if (root.get(key) instanceof LeafNode) {
+            return root.get(key).getKey(key);
+        } else {
             return Optional.empty();
-        }
+        }*/
+        return root.get(key).getKey(key);
     }
 
     /**
