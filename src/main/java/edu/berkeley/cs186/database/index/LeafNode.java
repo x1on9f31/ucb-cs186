@@ -147,7 +147,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.get.
     @Override
     public LeafNode get(DataBox key) {
-        // TODO(proj2): implement
+        // (proj2): implement
 //        if (keys.size() < 1) {
 //            // 空叶节点，直接返回null
 //            return null;
@@ -194,7 +194,24 @@ class LeafNode extends BPlusNode {
     public void remove(DataBox key) {
         // TODO(proj2): implement
 
-        return;
+        int pos = keys.indexOf(key); // 找到需要删除的元素所在位置pos
+        if (pos == -1) {
+            // 没有对应的元素，do nothing，直接返回
+            return;
+        }
+//        for (int i = pos; i < size - 1; i++) {
+//            // 从要删除的元素开始，用每个元素的后一个元素来覆盖前一个位置的元素
+//            keys.set(i, keys.get(i+1));
+//            rids.set(i, rids.get(i+1));
+//        }
+//        // 删除最后的元素
+//        keys.remove(size - 1);
+//        rids.remove(size - 1);
+        // 直接使用Java List提供的方法来remove对应的key和rid
+        keys.remove(pos);
+        rids.remove(pos);
+
+        sync();
     }
 
     // Iterators ///////////////////////////////////////////////////////////////
@@ -240,7 +257,7 @@ class LeafNode extends BPlusNode {
 
     /** Serializes this leaf to its page. */
     private void sync() {
-        page.pin();
+        page.pin(); // 会将该page锁住，防止其被其他进程修改
         try {
             Buffer b = page.getBuffer();
             byte[] newBytes = toBytes();
@@ -250,7 +267,8 @@ class LeafNode extends BPlusNode {
                 page.getBuffer().put(toBytes());
             }
         } finally {
-            page.unpin();
+            // finally语句一定会被执行，我们在这里做一些关闭连接，释放线程等清理工作
+            page.unpin(); // 释放在开始一开始被锁住的page
         }
     }
 

@@ -132,8 +132,13 @@ class InnerNode extends BPlusNode {
     @Override
     public void remove(DataBox key) {
         // TODO(proj2): implement
+        // 初步思路，使用InnerNode::numLessThanEqual找到对应的LeafNode，调用其LeafNode::remove
+        // 来完成删除任务。
 
-        return;
+        int cursor = numLessThanEqual(key, keys);
+        getChild(cursor).remove(key);
+
+        sync();
     }
 
     // Helpers /////////////////////////////////////////////////////////////////
