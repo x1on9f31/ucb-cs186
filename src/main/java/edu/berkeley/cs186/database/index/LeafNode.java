@@ -113,6 +113,7 @@ class LeafNode extends BPlusNode {
      */
     LeafNode(BPlusTreeMetadata metadata, BufferManager bufferManager, List<DataBox> keys,
              List<RecordId> rids, Optional<Long> rightSibling, LockContext treeContext) {
+        // 该构造函数会创建一个全新的叶节点
         this(metadata, bufferManager, bufferManager.fetchNewPage(treeContext, metadata.getPartNum()),
              keys, rids,
              rightSibling, treeContext);
@@ -396,12 +397,16 @@ class LeafNode extends BPlusNode {
 
         List<DataBox> keys = new ArrayList<>();
         List<RecordId> rids = new ArrayList<>();
-        Optional<Long> rightSibling = Optional.of(buf.getLong());    // get the rightSibling
+        // 不能忘记对buf.getLong()的值进行检查！！
+        //
+        Long tempSibiling = buf.getLong();
+        Optional<Long> rightSibling = tempSibiling == -1 ? Optional.empty() : Optional.of(tempSibiling);    // get the rightSibling
         int n = buf.getInt(); // get the number of pairs
         for (int i = 0; i < n; ++i) {
             keys.add(DataBox.fromBytes(buf, metadata.getKeySchema()));
             rids.add(RecordId.fromBytes(buf));
         }
+        // 注意下面使用的构造函数是重用现有存在的page的那一个；
         return new LeafNode(metadata, bufferManager, page, keys, rids, rightSibling, treeContext);
     }
 
