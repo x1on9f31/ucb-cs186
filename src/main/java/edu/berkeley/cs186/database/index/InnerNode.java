@@ -116,6 +116,10 @@ class InnerNode extends BPlusNode {
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
         // TODO(proj2): implement
 
+        int index = numLessThanEqual(key, keys);
+        BPlusNode child = getChild(index);
+        Optional<Pair<DataBox, Long>> o = child.put(key, rid);
+
         return Optional.empty();
     }
 

@@ -145,7 +145,7 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        // TODO(proj2): implement
+        // (proj2): implement
         // BPlusTree类中的get方法发起调用，InnerNode中的get是recursive case
         // LeafNode中的get是base case
         // root是一个LeafNode，其get()函数返回一个LeafNode或null？
@@ -213,7 +213,7 @@ public class BPlusTree {
 
         // TODO(proj2): Return a BPlusTreeIterator.
 
-        return Collections.emptyIterator();
+        return new BPlusTreeIterator();
     }
 
     /**
@@ -246,7 +246,7 @@ public class BPlusTree {
 
         // TODO(proj2): Return a BPlusTreeIterator.
 
-        return Collections.emptyIterator();
+        return new BPlusTreeIterator(key);
     }
 
     /**
@@ -268,7 +268,7 @@ public class BPlusTree {
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
 
-        return;
+
     }
 
     /**
@@ -316,9 +316,9 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        // TODO(proj2): implement
+        // (proj2): implement
 
-        return;
+        this.root.remove(key);
     }
 
     // Helpers /////////////////////////////////////////////////////////////////
@@ -431,19 +431,69 @@ public class BPlusTree {
     // Iterator ////////////////////////////////////////////////////////////////
     private class BPlusTreeIterator implements Iterator<RecordId> {
         // TODO(proj2): Add whatever fields and constructors you want here.
+        private Iterator<RecordId> idIterator;
+        private LeafNode currLeaf;
+
+        public BPlusTreeIterator() {
+            currLeaf = root.getLeftmostLeaf();
+            idIterator = root.getLeftmostLeaf().scanAll();
+        }
+
+        public BPlusTreeIterator(DataBox key) {
+            currLeaf = root.get(key);
+            idIterator = currLeaf.scanGreaterEqual(key);
+        }
+
 
         @Override
         public boolean hasNext() {
             // TODO(proj2): implement
 
+            if (idIterator == null) {
+                return false;
+            }
+
+            if (idIterator.hasNext()) {
+                return true;
+            }
+
+            Optional<LeafNode> sibling = currLeaf.getRightSibling();
+            while (sibling.isPresent()) {
+                // 有可能存在前面的LeafNode为空，但右边的LeafNode还有值的情况
+                // 所以需要使用循环来遍历有的LeafNode
+                /**
+                 *
+                 *                               inner
+                 *                               +----+----+----+----+
+                 *                               | 10 | 20 |    |    |
+                 *                               +----+----+----+----+
+                 *                              /     |     \
+                 *                         ____/      |      \____
+                 *                        /           |           \
+                 *   +----+----+----+----+  +----+----+----+----+  +----+----+----+----+
+                 *   |    |    |    |    |->| 11 | 12 | 13 |    |->| 21 | 22 | 23 |    |
+                 *   +----+----+----+----+  +----+----+----+----+  +----+----+----+----+
+                 *   leaf0                  leaf1                  leaf2
+                 */
+                currLeaf = sibling.get();
+                idIterator = currLeaf.scanAll();
+                if (idIterator.hasNext()) {
+                    return true;
+                } else {
+                    // 遍历其rightSibling
+                    sibling = currLeaf.getRightSibling();
+                }
+            }
             return false;
         }
 
         @Override
         public RecordId next() {
             // TODO(proj2): implement
-
-            throw new NoSuchElementException();
+            if (idIterator.hasNext()) {
+                return idIterator.next();
+            }
+            return null;
         }
     }
 }
