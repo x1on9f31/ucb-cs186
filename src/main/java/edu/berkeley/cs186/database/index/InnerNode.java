@@ -81,18 +81,8 @@ class InnerNode extends BPlusNode {
     // See BPlusNode.get.
     @Override
     public LeafNode get(DataBox key) {
-        // TODO(proj2): implement
-//        if (keys.size() < 1) {
-//            return null;
-//        }
-//        int cursor = 0;
-//        for (DataBox k : keys) {
-//            if (key.compareTo(k) < 0) {
-//                break;
-//            }
-//            cursor++;
-//        }
-//        return getChild(cursor).getLeftmostLeaf();
+        // (proj2): implement
+
         int n = keys.size();
         for (int i = 0; i < n; i++) {
             if (key.compareTo(keys.get(i)) < 0) {
@@ -108,13 +98,19 @@ class InnerNode extends BPlusNode {
         assert(children.size() > 0);
         // (proj2): implement
 
-        return getChild(0).getLeftmostLeaf();
+        BPlusNode curr = this;
+
+        while (curr.getClass() != LeafNode.class) {
+            // 循环跳过所有的InnerNode
+            curr = ((InnerNode) curr).getChild(0);
+        }
+        return curr.getLeftmostLeaf();
     }
 
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
-        // TODO(proj2): implement
+        // (proj2): implement
 
         int index = numLessThanEqual(key, keys);
         Optional<Pair<DataBox, Long>> o = getChild(index).put(key, rid);
@@ -138,12 +134,15 @@ class InnerNode extends BPlusNode {
 
         // case 2: 插入后自身分裂了，要维护好相关信息并返回
         // 注意！与LeafNode不同，InnerNode分裂后的splitKey会被直接move up，而非保存在分裂后的右侧节点
+
+        // 先插入要插入的key和pointer，准备分裂
         keys.add(pos, o.get().getFirst());
         children.add(pos + 1, o.get().getSecond());
         int mid = keys.size() / 2;
         DataBox splitKey = keys.get(mid);
         InnerNode newInner = new InnerNode(metadata, bufferManager, keys.subList(mid + 1, keys.size()), children.subList(mid+1, children.size()),
                                             treeContext);
+        // 更新左节点的keys和children
         this.keys = this.keys.subList(0, mid);
         this.children = this.children.subList(0, mid + 1);
         sync();
