@@ -117,10 +117,38 @@ class InnerNode extends BPlusNode {
         // TODO(proj2): implement
 
         int index = numLessThanEqual(key, keys);
-        BPlusNode child = getChild(index);
-        Optional<Pair<DataBox, Long>> o = child.put(key, rid);
+        Optional<Pair<DataBox, Long>> o = getChild(index).put(key, rid);
 
-        return Optional.empty();
+        if (!o.isPresent()) {
+            // 插入成功，且子节点没有分裂，直接返回Optional.empty()
+            return Optional.empty();
+        }
+
+        // 插入成功，但是子节点分裂了，需要将返回的key插入InnerNode，并维护
+        // case 1: 插入后自身不分裂，直接插入，维护好keys和children数组，最后返回Optional.empty()
+        int pos = numLessThanEqual(o.get().getFirst(), keys);
+        if (keys.size() + 1 <= 2 * metadata.getOrder()) {
+            // 可以直接插入
+            keys.add(pos, o.get().getFirst());
+            children.add(pos + 1, o.get().getSecond());
+
+            sync(); // sync representation in buffer and memory
+            return Optional.empty();
+        }
+
+        // case 2: 插入后自身分裂了，要维护好相关信息并返回
+        // 注意！与LeafNode不同，InnerNode分裂后的splitKey会被直接move up，而非保存在分裂后的右侧节点
+        keys.add(pos, o.get().getFirst());
+        children.add(pos + 1, o.get().getSecond());
+        int mid = keys.size() / 2;
+        DataBox splitKey = keys.get(mid);
+        InnerNode newInner = new InnerNode(metadata, bufferManager, keys.subList(mid + 1, keys.size()), children.subList(mid+1, children.size()),
+                                            treeContext);
+        this.keys = this.keys.subList(0, mid);
+        this.children = this.children.subList(0, mid + 1);
+        sync();
+
+        return Optional.of(new Pair<>(splitKey, newInner.getPage().getPageNum()));
     }
 
     // See BPlusNode.bulkLoad.

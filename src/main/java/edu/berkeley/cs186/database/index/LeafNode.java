@@ -177,7 +177,45 @@ class LeafNode extends BPlusNode {
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
         // TODO(proj2): implement
 
-        return Optional.empty();
+        int pos = 0;
+        for (int i = 0; i < keys.size(); i++) {
+            if (key.compareTo(keys.get(i)) == 0) {
+                throw new BPlusTreeException("Duplicate Keys.");
+            } else if (key.compareTo(keys.get(i)) < 0) {
+                pos = i;
+                break;
+            } else {
+                pos = i + 1;
+            }
+        }
+
+        // case 1: 插入后不造成溢出，直接插入并返回Optional.empty()
+        if (this.keys.size() + 1 <= 2 * metadata.getOrder()) {
+
+            keys.add(pos, key);
+            rids.add(pos, rid);
+
+            sync(); // ensure the representation in buffer is up-to-date
+            return Optional.empty();
+        }
+
+        // case 2: 插入后造成LeafNode分裂，应做好对应的维护工作
+        // 1. 创建一个新的LeafNode, 其rightSibling是原来LeafNode的rightSibling（如果有的话）
+        //    新LeafNode的keys和rids均为keys/rids.subList(mid, keys.size()); splitKey (mid)是包含在右边的叶节点中的。
+        // 2. 返回由splitKey和新LeafNode的PageNum组成的Pair
+        keys.add(pos, key);
+        rids.add(pos, rid);
+        int mid = keys.size() / 2;
+        DataBox splitKey = keys.get(mid);
+        LeafNode newNode = new LeafNode(metadata, bufferManager, keys.subList(mid, keys.size()), rids.subList(mid, keys.size()),
+                                        this.rightSibling, treeContext);
+        // 修改左节点的相关数据
+        rightSibling = Optional.of(newNode.getPage().getPageNum()); // 其rightSibling应为新分裂出的节点
+        keys = this.keys.subList(0, mid);
+        rids = this.rids.subList(0, mid);
+
+        sync();
+        return Optional.of(new Pair<>(splitKey, newNode.getPage().getPageNum()));
     }
 
     // See BPlusNode.bulkLoad.
