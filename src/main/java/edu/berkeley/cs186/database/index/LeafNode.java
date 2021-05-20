@@ -210,7 +210,7 @@ class LeafNode extends BPlusNode {
         LeafNode newNode = new LeafNode(metadata, bufferManager, keys.subList(mid, keys.size()), rids.subList(mid, keys.size()),
                                         this.rightSibling, treeContext);
         // 修改左节点的相关数据
-        rightSibling = Optional.of(newNode.getPage().getPageNum()); // 其rightSibling应为新分裂出的节点
+        rightSibling = Optional.of(newNode.getPage().getPageNum()); // 其rightSibling应为新分裂出的右节点
         keys = this.keys.subList(0, mid);
         rids = this.rids.subList(0, mid);
 
