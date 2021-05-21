@@ -270,11 +270,11 @@ public class BPlusTree {
         // 下面的分裂逻辑
         Pair<DataBox, Long> p = o.get();
         List<DataBox> keys = new ArrayList<>();
-        keys.add(p.getFirst());
+        keys.add(p.getFirst()); // 将传上来的key设置为新根节点的第一个key
         List<Long> children = new ArrayList<>();
-        children.add(root.getPage().getPageNum());
+        children.add(root.getPage().getPageNum());  // 原来的根节点是新根节点的左孩子
         children.add(p.getSecond());
-        updateRoot(new InnerNode(metadata, bufferManager, keys, children, lockContext));
+        updateRoot(new InnerNode(metadata, bufferManager, keys, children, lockContext));    // 根节点是InnerNode
     }
 
     /**
