@@ -167,7 +167,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.getLeftmostLeaf.
     @Override
     public LeafNode getLeftmostLeaf() {
-        // TODO(proj2): implement
+        // (proj2): implement
         // 根据BPlusNode::getLeftmostLeaf的定义，
         // LeafNode的getLeftmostLeaf应该返回自身
         return this;
@@ -176,7 +176,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
-        // TODO(proj2): implement
+        // (proj2): implement
 
         int pos = 0;
         for (int i = 0; i < keys.size(); i++) {
