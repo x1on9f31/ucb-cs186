@@ -315,7 +315,7 @@ public class BPlusTree {
             if (optional.isPresent()) {
                 Pair<DataBox, Long> p = optional.get();
 
-                // 组装 root 节点的 keys和children
+                // 组装新root节点的keys和children
                 List<DataBox> keys = new ArrayList<>();
                 keys.add(p.getFirst());
 
