@@ -7,6 +7,7 @@ import edu.berkeley.cs186.database.databox.DataBox;
 import edu.berkeley.cs186.database.databox.Type;
 import edu.berkeley.cs186.database.memory.BufferManager;
 import edu.berkeley.cs186.database.memory.Page;
+import edu.berkeley.cs186.database.query.QueryOperator;
 import edu.berkeley.cs186.database.table.RecordId;
 
 import javax.xml.crypto.Data;
@@ -155,14 +156,48 @@ class InnerNode extends BPlusNode {
     public Optional<Pair<DataBox, Long>> bulkLoad(Iterator<Pair<DataBox, RecordId>> data,
             float fillFactor) {
         // TODO(proj2): implement
+        // 强调阶数
+        if (fillFactor < 0 || fillFactor > 1) {
+            throw new BPlusTreeException("Illegal fillFactor");
+        }
 
-        return Optional.empty();
+        // keep bulk-loading the rightmost child, until the data is exhausted
+        // or the current InnerNode is full (keys.size > 2 * metadata.getOrder();)
+        int d = this.metadata.getOrder();
+        while (data.hasNext() && this.keys.size() <= 2 * d) {
+            // 当前节点未满，持续bulk load rightmost child
+            BPlusNode child = this.getChild(children.size() - 1);
+            Optional<Pair<DataBox, Long>> optional = child.bulkLoad(data, fillFactor);
+
+            if (optional.isPresent()) {
+                Pair<DataBox, Long> pair = optional.get();
+                keys.add(keys.size(), pair.getFirst());
+                children.add(children.size(), pair.getSecond());
+            }
+        }
+
+        if (keys.size() <= 2 * d) {
+            sync();
+            return Optional.empty();
+        }
+
+        assert (keys.size() == 2 * d + 1);
+        DataBox splitKey = keys.get(d);
+
+        // create right node
+        InnerNode newInner = new InnerNode(metadata, bufferManager, keys.subList(d + 1, keys.size()),
+                                           children.subList(d + 1, children.size() + 1), treeContext);
+        this.keys = keys.subList(0, d);
+        this.children = this.children.subList(0, d + 1);
+
+        sync();
+        return Optional.of(new Pair<>(splitKey, newInner.getPage().getPageNum()));
     }
 
     // See BPlusNode.remove.
     @Override
     public void remove(DataBox key) {
-        // TODO(proj2): implement
+        // (proj2): implement
         // 初步思路，使用InnerNode::numLessThanEqual找到对应的LeafNode，调用其LeafNode::remove
         // 来完成删除任务。
 

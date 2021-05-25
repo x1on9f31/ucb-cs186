@@ -1,5 +1,6 @@
 package edu.berkeley.cs186.database.index;
 
+import edu.berkeley.cs186.database.cli.parser.ParseException;
 import edu.berkeley.cs186.database.common.Buffer;
 import edu.berkeley.cs186.database.common.Pair;
 import edu.berkeley.cs186.database.concurrency.LockContext;
@@ -224,7 +225,39 @@ class LeafNode extends BPlusNode {
             float fillFactor) {
         // TODO(proj2): implement
 
-        return Optional.empty();
+        // 检查fillFactor的范围
+        if (fillFactor < 0 || fillFactor > 1) {
+            throw new BPlusTreeException("Illegal fillFactor");
+        }
+
+        int fillNum = (int) Math.ceil(2 * this.metadata.getOrder() * fillFactor);
+
+        // 当传入的data不为空且没有填满至fillNum + 1时，持续插入
+        while (data.hasNext() && this.keys.size() != fillNum) {
+            Pair<DataBox, RecordId> p = data.next();
+            keys.add(p.getFirst());
+            rids.add(p.getSecond());
+        }
+
+        if (!data.hasNext()) {
+            // 没有填满，节点不分裂，直接返回Optional.empty()
+            sync();
+            return Optional.empty();
+        }
+
+        // 开始分裂节点
+        Pair<DataBox, RecordId> pair = data.next();
+        DataBox splitKey = pair.getFirst();
+        List<DataBox> rightKeys = new ArrayList<>();
+        List<RecordId> rightIds = new ArrayList<>();
+        rightKeys.add(pair.getFirst());
+        rightIds.add(pair.getSecond());
+        LeafNode newLeaf = new LeafNode(metadata, bufferManager, rightKeys, rightIds,
+                            this.rightSibling, treeContext);
+        rightSibling = Optional.of(newLeaf.getPage().getPageNum());
+
+        sync();
+        return Optional.of(new Pair<>(splitKey, newLeaf.getPage().getPageNum()));
     }
 
     // See BPlusNode.remove.

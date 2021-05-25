@@ -298,11 +298,35 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        // TODO(proj2): implement
+        // (proj2): implement
         // Note: You should NOT update the root variable directly.
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
+        // 获得叶子结点来判断是否为空树
+        LeafNode left = this.root.getLeftmostLeaf();
+        if (left != this.root // 叶子不等于根 证明有数据
+                || left.scanAll().hasNext()) { // 叶子下的迭代器能后进行hasNext 证明有数据
+            throw new BPlusTreeException("cannot bulk load into nonempty tree");
+        }
+        // 传进来是一个Iterator,在前面没有想到要在开始的时候去迭代它
+        while (data.hasNext()) {
+            // 递归往下走
+            Optional<Pair<DataBox, Long>> optional = this.root.bulkLoad(data, fillFactor);
+            if (optional.isPresent()) {
+                Pair<DataBox, Long> p = optional.get();
 
+                // 组装 root 节点的 keys和children
+                List<DataBox> keys = new ArrayList<>();
+                keys.add(p.getFirst());
+
+                List<Long> children = new ArrayList<>();
+                children.add(root.getPage().getPageNum());
+                children.add(p.getSecond());
+
+                // 使用官方推荐的updateRoot来更新结点,不要用直接赋值的方式
+                updateRoot(new InnerNode(metadata, bufferManager, keys, children, lockContext));
+            }
+        }
     }
 
     /**
