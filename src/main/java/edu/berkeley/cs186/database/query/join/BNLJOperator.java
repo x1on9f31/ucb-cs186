@@ -87,7 +87,7 @@ public class BNLJOperator extends JoinOperator {
          */
         private void fetchNextLeftBlock() {
             // TODO(proj3_part1): implement
-            if (!this.leftBlockIterator.hasNext()) {
+            if (!this.leftSourceIterator.hasNext()) {
                 return;
             }
             this.leftBlockIterator = QueryOperator.getBlockIterator(this.leftSourceIterator, BNLJOperator.this.getSchema(), BNLJOperator.this.numBuffers-2);
