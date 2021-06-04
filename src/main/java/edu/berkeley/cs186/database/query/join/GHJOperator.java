@@ -67,7 +67,7 @@ public class GHJOperator extends JoinOperator {
      * @param pass the current pass (used to pick a hash function)
      */
     private void partition(Partition[] partitions, Iterable<Record> records, boolean left, int pass) {
-        // TODO(proj3_part1): implement the partitioning logic
+        // (proj3_part1): implement the partitioning logic
         // You may find the implementation in SHJOperator.java to be a good
         // starting point. You can use the static method HashFunc.hashDataBox
         // to get a hash value.
@@ -117,7 +117,7 @@ public class GHJOperator extends JoinOperator {
                 "fit in B-2 pages of memory."
             );
         }
-        // TODO(proj3_part1): implement the building and probing stage
+        // (proj3_part1): implement the building and probing stage
         // You shouldn't refer to any variable starting with "left" or "right"
         // here, use the "build" and "probe" variables we set up for you.
         // Check out how SHJOperator implements this function if you feel stuck.
@@ -173,9 +173,11 @@ public class GHJOperator extends JoinOperator {
             // TODO(proj3_part1): implement the rest of grace hash join
             // If you meet the conditions to run the build and probe you should
             // do so immediately. Otherwise you should make a recursive call.
-            // 根据leftPartition[i]的大小来决定是否可以进行build and probe on a partition
-            // 如果leftPartitions[i].getNumPages() < B - 2; 说明可以放入buffer中，否则继续切分
+            // 根据leftPartition[i]和rightPartition[i]的大小来决定是否可以进行build and probe on a partition
+            // 观察，buildAndProbe函数，其在开头的检查说明leftPatition或rightPartition有一个小于等于B-2即可;
+            // 小于B-2的那一个就会作为buildPartition，另一个作为probePartition
             if (leftPartitions[i].getNumPages() <= numBuffers - 2 || rightPartitions[i].getNumPages() <= numBuffers - 2) {
+                //
                 buildAndProbe(leftPartitions[i], rightPartitions[i]);
             } else {
                 run(leftPartitions[i], rightPartitions[i], pass+1);
@@ -245,9 +247,12 @@ public class GHJOperator extends JoinOperator {
         ArrayList<Record> leftRecords = new ArrayList<>();
         ArrayList<Record> rightRecords = new ArrayList<>();
 
-        // TODO(proj3_part1): populate leftRecords and rightRecords such that
+        // (proj3_part1): populate leftRecords and rightRecords such that
         // SHJ breaks when trying to join them but not GHJ
-
+        for (int i = 0; i < 200; i++) {
+            leftRecords.add(createRecord(i));
+        }
+        rightRecords.add(createRecord(1));
         return new Pair<>(leftRecords, rightRecords);
     }
 
@@ -267,8 +272,12 @@ public class GHJOperator extends JoinOperator {
     public static Pair<List<Record>, List<Record>> getBreakGHJInputs() {
         ArrayList<Record> leftRecords = new ArrayList<>();
         ArrayList<Record> rightRecords = new ArrayList<>();
-        // TODO(proj3_part1): populate leftRecords and rightRecords such that GHJ breaks
-
+        // (proj3_part1): populate leftRecords and rightRecords such that GHJ breaks
+        for (int i = 0; i < 5 * 4 * 8; i++) {
+            // 如果都是相同的
+            leftRecords.add(createRecord(1));
+            rightRecords.add(createRecord(1));
+        }
         return new Pair<>(leftRecords, rightRecords);
     }
 }
