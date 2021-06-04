@@ -1,6 +1,5 @@
 package edu.berkeley.cs186.database.query.join;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Accessor;
 import edu.berkeley.cs186.database.TransactionContext;
 import edu.berkeley.cs186.database.common.HashFunc;
 import edu.berkeley.cs186.database.common.Pair;
@@ -13,7 +12,6 @@ import edu.berkeley.cs186.database.query.disk.Run;
 import edu.berkeley.cs186.database.table.Record;
 import edu.berkeley.cs186.database.table.Schema;
 
-import javax.xml.crypto.Data;
 import java.util.*;
 
 public class GHJOperator extends JoinOperator {
@@ -123,6 +121,7 @@ public class GHJOperator extends JoinOperator {
         // You shouldn't refer to any variable starting with "left" or "right"
         // here, use the "build" and "probe" variables we set up for you.
         // Check out how SHJOperator implements this function if you feel stuck.
+
     }
 
     /**
