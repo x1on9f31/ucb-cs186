@@ -10,7 +10,6 @@ import edu.berkeley.cs186.database.memory.Page;
 import edu.berkeley.cs186.database.query.QueryOperator;
 import edu.berkeley.cs186.database.table.RecordId;
 
-import javax.xml.crypto.Data;
 import java.nio.ByteBuffer;
 import java.util.*;
 
