@@ -87,7 +87,12 @@ public class SortOperator extends QueryOperator {
      */
     public Run sortRun(Iterator<Record> records) {
         // TODO(proj3_part1): implement
-        return null;
+        // this method uses the *forEachRemaining* method that has been
+        // added to the *Iterator* interface
+        List<Record> recordList = new ArrayList<>();
+        records.forEachRemaining(recordList::add);
+        recordList.sort(this.comparator);
+        return makeRun(recordList);
     }
 
     /**
@@ -108,7 +113,29 @@ public class SortOperator extends QueryOperator {
     public Run mergeSortedRuns(List<Run> runs) {
         assert (runs.size() <= this.numBuffers - 1);
         // TODO(proj3_part1): implement
-        return null;
+        PriorityQueue<Pair<Record, Integer>> pq = new PriorityQueue(new RecordPairComparator());
+        Run sortedRun = makeRun();
+
+        List<BacktrackingIterator> runIterators = new ArrayList<>();
+        for (int i = 0; i < runs.size(); i++) {
+            runIterators.add(runs.get(i).iterator());
+        }
+
+        for (int i = 0; i < runIterators.size(); i++) {
+            if (runIterators.get(i).hasNext()) {
+                pq.add(new Pair(runIterators.get(i).next(), i));
+            }
+        }
+
+        while (!pq.isEmpty()) {
+            Pair<Record, Integer> p = pq.poll();
+            Integer index = p.getSecond();
+            sortedRun.add(p.getFirst());
+            if (runIterators.get(index).hasNext()) {
+                pq.add(new Pair(runIterators.get(index).next(), index));
+            }
+        }
+        return sortedRun;
     }
 
     /**
@@ -133,7 +160,18 @@ public class SortOperator extends QueryOperator {
      */
     public List<Run> mergePass(List<Run> runs) {
         // TODO(proj3_part1): implement
-        return Collections.emptyList();
+        if (runs.size() == 1) {
+            return runs;
+        }
+        List<Run> mergedRuns = new ArrayList<>();
+        int left = 0, right = Math.min(numBuffers - 1, runs.size()), diff = numBuffers - 1;
+        while (left < right) {
+            Run sortedRun = mergeSortedRuns(runs.subList(left, right));
+            mergedRuns.add(sortedRun);
+            left = left + diff;
+            right = Math.min(right + diff, runs.size());
+        }
+        return mergedRuns;
     }
 
     /**
@@ -149,7 +187,18 @@ public class SortOperator extends QueryOperator {
         Iterator<Record> sourceIterator = getSource().iterator();
 
         // TODO(proj3_part1): implement
-        return makeRun(); // TODO(proj3_part1): replace this!
+
+        List<Run> sortedRuns = new ArrayList<>();
+        while (sourceIterator.hasNext()) {
+            // initial pass
+            BacktrackingIterator<Record> pageIterator = QueryOperator.getBlockIterator(sourceIterator, getSchema(), numBuffers);
+            sortedRuns.add(sortRun(pageIterator));
+        }
+
+        while (sortedRuns.size() != 1) {
+            sortedRuns = mergePass(sortedRuns);
+        }
+        return sortedRuns.get(0);
     }
 
     /**

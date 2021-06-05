@@ -174,7 +174,7 @@ public class GHJOperator extends JoinOperator {
             // If you meet the conditions to run the build and probe you should
             // do so immediately. Otherwise you should make a recursive call.
             // 根据leftPartition[i]和rightPartition[i]的大小来决定是否可以进行build and probe on a partition
-            // 观察，buildAndProbe函数，其在开头的检查说明leftPatition或rightPartition有一个小于等于B-2即可;
+            // 观察，buildAndProbe函数，其在开头的检查说明leftPartition或rightPartition有一个小于等于B-2即可;
             // 小于B-2的那一个就会作为buildPartition，另一个作为probePartition
             if (leftPartitions[i].getNumPages() <= numBuffers - 2 || rightPartitions[i].getNumPages() <= numBuffers - 2) {
                 //
