@@ -574,10 +574,26 @@ public class QueryPlan {
      * minimum cost operator can be broken arbitrarily.
      */
     public QueryOperator minCostSingleAccess(String table) {
+        // : proj3_part2
+        // Initial the minimum cost operator as a SequentialScanOperator, then compute its cost as minCost
         QueryOperator minOp = new SequentialScanOperator(this.transaction, table);
+        int minCost = minOp.estimateIOCost(), except = -1;
 
-        // TODO(proj3_part2): implement
-        return minOp;
+        // IndexScan part
+        for (int index : getEligibleIndexColumns(table)) {
+            SelectPredicate selectPredicate = selectPredicates.get(index);
+            QueryOperator indexScan = new IndexScanOperator(transaction, table, selectPredicate.column,
+                                                            selectPredicate.operator, selectPredicate.value);
+            if (indexScan.estimateIOCost() < minCost) {
+                minOp = indexScan;
+                minCost = indexScan.estimateIOCost();
+                except = index;
+            }
+        }
+
+        // push down all the selection predicates that involve solely
+        // the table
+        return addEligibleSelections(minOp, except);
     }
 
     // Task 6: Join Selection //////////////////////////////////////////////////
