@@ -7,7 +7,6 @@ import edu.berkeley.cs186.database.query.MaterializeOperator;
 import edu.berkeley.cs186.database.query.QueryOperator;
 import edu.berkeley.cs186.database.query.SortOperator;
 import edu.berkeley.cs186.database.table.Record;
-import jdk.nashorn.internal.objects.NativeUint8Array;
 
 import java.util.Arrays;
 import java.util.Iterator;
