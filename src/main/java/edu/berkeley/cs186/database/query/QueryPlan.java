@@ -678,10 +678,12 @@ public class QueryPlan {
                     rightOperator = pass1Map.get(new HashSet<>(Collections.singleton(rightTable)));
                     newTable = rightTable;
                 } else if (!set.contains(leftTable) && set.contains(rightTable)) {
+                    // case 2
                     leftOperator = pass1Map.get(new HashSet<>(Collections.singleton(leftTable)));
                     rightOperator = prevMap.get(set);
                     newTable = leftTable;
                 } else {
+                    // case 3
                     continue;
                 }
                 // update the result map
