@@ -662,37 +662,7 @@ public class QueryPlan {
         //      calculate the cheapest join with the new table (the one you
         //      fetched an operator for from pass1Map) and the previously joined
         //      tables. Then, update the result map if needed.
-        for (Set<String> set : prevMap.keySet()) {
-        //for (Map.Entry<Set<String>, QueryOperator> prevEntry : prevMap.entrySet())
-            for (JoinPredicate joinPredicate : this.joinPredicates) {
-                String leftTable = joinPredicate.leftTable;
-                String leftColumn = joinPredicate.leftColumn;
-                String rightTable = joinPredicate.rightTable;
-                String rightColumn = joinPredicate.rightColumn;
 
-                QueryOperator leftOperator, rightOperator;
-                String newTable;
-                if (set.contains(joinPredicate.leftTable) && !set.contains(joinPredicate.rightTable)) {
-                    // case 1
-                    leftOperator = prevMap.get(set);
-                    rightOperator = pass1Map.get(new HashSet<>(Collections.singleton(rightTable)));
-                    newTable = rightTable;
-                } else if (!set.contains(leftTable) && set.contains(rightTable)) {
-                    // case 2
-                    leftOperator = pass1Map.get(new HashSet<>(Collections.singleton(leftTable)));
-                    rightOperator = prevMap.get(set);
-                    newTable = leftTable;
-                } else {
-                    // case 3
-                    continue;
-                }
-                // update the result map
-                QueryOperator bestOperator = minCostJoinType(leftOperator, rightOperator, leftColumn, rightColumn);
-                Set<String> newTables = new HashSet<>(set);
-                newTables.add(newTable);
-                result.put(newTables, bestOperator);
-            }
-        }
         return result;
     }
 
