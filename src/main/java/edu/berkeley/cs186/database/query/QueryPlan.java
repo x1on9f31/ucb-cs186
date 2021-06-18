@@ -739,7 +739,32 @@ public class QueryPlan {
         // Set the final operator to the lowest cost operator from the last
         // pass, add group by, project, sort and limit operators, and return an
         // iterator over the final operator.
-        return this.executeNaive(); // TODO(proj3_part2): Replace this!
+
+        // pass 1
+        Map<Set<String>, QueryOperator> pass1Map = new HashMap<>();
+        for (String tableName : this.tableNames) {
+            // use minCostSingleAccess to find out the lowest cost QueryOperator that
+            // accesses the given table.
+            Set<String> consideredTables = new HashSet<>(Collections.singleton(tableName));
+            consideredTables.add(tableName);
+            pass1Map.put(consideredTables, minCostSingleAccess(tableName));
+        }
+
+        // pass i
+        Map<Set<String>, QueryOperator> prevMap = pass1Map;
+        for (int i = 2; i <= tableNames.size(); i++) {
+            // go through the tables and join all the tables.
+            prevMap = minCostJoins(prevMap, pass1Map);
+        }
+
+        // set the final operator to the lowest cost operator from the last
+        // pass, and add group by, project ,sort, and limit operators
+        // return the iteraotr over the final operator
+        this.finalOperator = minCostOperator(prevMap);
+        this.addGroupBy();
+        this.addProject();
+
+        return this.finalOperator.iterator();
     }
 
     // EXECUTE NAIVE ///////////////////////////////////////////////////////////
@@ -829,6 +854,8 @@ public class QueryPlan {
             }
             return this.finalOperator.iterator();
         } finally {
+            // will cause test failure if use the code below in
+            // QueryPlan::execute()
             this.transaction.clearAliasMap();
         }
     }
