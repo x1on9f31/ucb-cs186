@@ -759,7 +759,7 @@ public class QueryPlan {
 
         // set the final operator to the lowest cost operator from the last
         // pass, and add group by, project ,sort, and limit operators
-        // return the iteraotr over the final operator
+        // return the iterator over the final operator
         this.finalOperator = minCostOperator(prevMap);
         this.addGroupBy();
         this.addProject();
