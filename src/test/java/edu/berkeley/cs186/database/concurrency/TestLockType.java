@@ -87,11 +87,18 @@ public class TestLockType {
         assertTrue(LockType.compatible(LockType.IS, LockType.IX));
         assertTrue(LockType.compatible(LockType.IX, LockType.IS));
         assertTrue(LockType.compatible(LockType.IX, LockType.IX));
+
+        assertFalse(LockType.compatible(LockType.IS, LockType.X));
+        assertFalse(LockType.compatible(LockType.IX, LockType.S));
+        assertFalse(LockType.compatible(LockType.IX, LockType.SIX));
     }
 
     @Test
     @Category(PublicTests.class)
     public void testCompatibleXandX() {
+        // x only compatible with NL locks
+        assertTrue(LockType.compatible(LockType.X, LockType.NL));
+
         // X locks are incompatible with X locks
         assertFalse(LockType.compatible(LockType.X, LockType.X));
     }
@@ -121,13 +128,15 @@ public class TestLockType {
      * ----+-----+-----+-----+-----+-----+-----
      * IX  |  T  |  T  |  T  |  T  |  T  |  T
      * ----+-----+-----+-----+-----+-----+-----
-     * S   |  T  |     |     |     |     |
+     * S   |  T  |  F  |  F  |  F  |  F  |  F
      * ----+-----+-----+-----+-----+-----+-----
-     * SIX |  T  |     |     |     |     |
+     * SIX |  T  |  F  |  T  |  F  |  F  |  T
      * ----+-----+-----+-----+-----+-----+-----
-     * X   |  T  |     |     |     |     |
+     * X   |  T  |  F  |  F  |  F  |  F  |  F
      * ----+-----+-----+-----+-----+-----+-----
-     *
+     * According to (Stanford-db-sp19-14-Concurrency-p3) page 25
+     * SIX can be parent of SIX; However, the instructor *disallow* this in
+     * this project, since the S aspect of SIX child would be redundant!
      * The filled in cells are covered by the public test.
      * You can expect the blank cells to be covered by the hidden tests!
      */
