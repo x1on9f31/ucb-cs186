@@ -87,7 +87,7 @@ public enum LockType {
         if (required == null || substitute == null) {
             throw new NullPointerException("null lock type");
         }
-        // TODO(proj4_part1): implement
+        // TODO(proj4_part1): check the logic below.
         switch (substitute) {
             case NL: return required == NL;
             case IS: return required == IS || required == NL;
