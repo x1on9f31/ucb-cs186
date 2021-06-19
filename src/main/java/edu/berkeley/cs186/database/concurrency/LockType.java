@@ -72,7 +72,7 @@ public enum LockType {
             case X: return childLockType == LockType.NL; // NL can only be parent of NL
             case IX: return true;
             case IS: return childLockType == NL || childLockType == IS || childLockType == S;
-            case SIX: return childLockType != IS && childLockType != S && childLockType != SIX; //
+            case SIX: return childLockType != IS && childLockType != S && childLockType != SIX; // this project disallow child of SIX also be SIX;
             default: throw new UnsupportedOperationException("bad lock type");
         }
     }
