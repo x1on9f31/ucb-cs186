@@ -74,6 +74,9 @@ public class LockManager {
          */
         public void grantOrUpdateLock(Lock lock) {
             // TODO(proj4_part1): implement
+            // the tricky part here is that we need to update
+            // both 1. ResourceEntry::locks and
+            // 2. LockManager::transactionLocks
 
         }
 
@@ -83,7 +86,13 @@ public class LockManager {
          */
         public void releaseLock(Lock lock) {
             // TODO(proj4_part1): implement
-            return;
+            // releasing the lock `lock` means remove it from
+            // 1. the list `locks` of ResourceEntry
+            // 2. the List<Lock> of transactionLocks
+            // then process the Queue
+            locks.remove(lock);
+            transactionLocks.get(lock.transactionNum).remove(lock);
+            processQueue();
         }
 
         /**
@@ -91,7 +100,7 @@ public class LockManager {
          * the end otherwise.
          */
         public void addToQueue(LockRequest request, boolean addFront) {
-            // TODO(proj4_part1): implement
+            // (proj4_part1): implement
             if (addFront) {
                 waitingQueue.addFirst(request);
             } else {
