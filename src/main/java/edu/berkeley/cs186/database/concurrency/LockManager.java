@@ -77,7 +77,30 @@ public class LockManager {
             // the tricky part here is that we need to update
             // both 1. ResourceEntry::locks and
             // 2. LockManager::transactionLocks
+            long transactionNum = lock.transactionNum;
+            // if no lock on this resource, grant the lock
+            if (getTransactionLockType(transactionNum) == LockType.NL) {
+                transactionLocks.putIfAbsent(transactionNum, new ArrayList<>());
+                transactionLocks.get(transactionNum).add(lock);
 
+                // update locks on this ResourceEntry
+                locks.add(lock);
+            } else {
+                // update the lock
+                for (Lock lockOnCurrTxn : transactionLocks.get(transactionNum)) {
+                    // update lock holds by the given transaction
+                    if (lockOnCurrTxn.name.equals(lock.name)) {
+                        lockOnCurrTxn.lockType = lock.lockType;
+                    }
+                }
+
+                for (Lock lockOnCurrResource : locks) {
+                    // update the lock on this resource
+                    if (lockOnCurrResource.name.equals(lock.name)) {
+                        lockOnCurrResource.lockType = lock.lockType;
+                    }
+                }
+            }
         }
 
         /**
@@ -112,12 +135,36 @@ public class LockManager {
          * Grant locks to requests from front to back of the queue, stopping
          * when the next lock cannot be granted. Once a request is completely
          * granted, the transaction that made the request can be unblocked.
+         * The request at the front of the queue is considered, and if it doesn't conflict with any of the existing
+         * locks on the resource, it should be removed from the queue and:
+         *      1. the transaction that made the request should be given the lock
+         *      2. any locks that the request stated should be released are released
+         *      3. the transaction that made the request should be unblocked
+         * The previous step should be repeated until the first request on the queue cannot be satisfied
+         * or the queue is empty.
          */
         private void processQueue() {
             Iterator<LockRequest> requests = waitingQueue.iterator();
 
             // TODO(proj4_part1): implement
-            return;
+            while (requests.hasNext()) {
+                LockRequest request = requests.next();
+                Lock lock = request.lock;
+                long txNum = request.transaction.getTransNum();
+
+                if (checkCompatible(lock.lockType, txNum)) {
+                    // grant the lock
+                    grantOrUpdateLock(lock);
+
+                    // the first request in the queue has been processed, remove it
+                    requests.remove();
+
+                    // unblock the corresponding transaction
+                    request.transaction.unblock();
+                } else {
+                    break; // stop
+                }
+            }
         }
 
         /**
@@ -125,6 +172,22 @@ public class LockManager {
          */
         public LockType getTransactionLockType(long transaction) {
             // TODO(proj4_part1): implement
+            if (locks.isEmpty()) {
+                // no locks on this resource, return LockType.NL
+                return LockType.NL;
+            }
+
+            List<Lock> locksHoldByTransaction = transactionLocks.get(transaction);
+            if (locksHoldByTransaction == null || locksHoldByTransaction.isEmpty()) {
+                // the transaction holds no lock, return LockType.NL
+            }
+            ResourceName resourceName = locks.get(0).name;
+            for (Lock lock : locksHoldByTransaction) {
+                if (lock.name.equals(resourceName)) {
+                    return lock.lockType;
+                }
+            }
+
             return LockType.NL;
         }
 
