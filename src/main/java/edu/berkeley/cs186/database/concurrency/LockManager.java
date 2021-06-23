@@ -58,7 +58,7 @@ public class LockManager {
          * the resource. Pass -1 to except if there is no exception.
          */
         public boolean checkCompatible(LockType lockType, long except) {
-            // TODO(proj4_part1): implement
+            // (proj4_part1): implement
             for (Lock lock : locks) {
                 if (lock.transactionNum != except && !LockType.compatible(lock.lockType, lockType)) {
                     return false;
@@ -73,7 +73,7 @@ public class LockManager {
          * lock.
          */
         public void grantOrUpdateLock(Lock lock) {
-            // TODO(proj4_part1): implement
+            // (proj4_part1): implement
             // the tricky part here is that we need to update
             // both 1. ResourceEntry::locks and
             // 2. LockManager::transactionLocks
@@ -120,7 +120,7 @@ public class LockManager {
          * lock has been granted before.
          */
         public void releaseLock(Lock lock) {
-            // TODO(proj4_part1): implement
+            // (proj4_part1): implement
             // releasing the lock `lock` means remove it from
             // 1. the list `locks` of ResourceEntry
             // 2. the List<Lock> of transactionLocks
@@ -158,7 +158,7 @@ public class LockManager {
         private void processQueue() {
             Iterator<LockRequest> requests = waitingQueue.iterator();
 
-            // TODO(proj4_part1): implement
+            // (proj4_part1): implement
             while (requests.hasNext()) {
                 LockRequest request = requests.next();
                 Lock lock = request.lock;
@@ -183,7 +183,7 @@ public class LockManager {
          * Gets the type of lock `transaction` has on this resource.
          */
         public LockType getTransactionLockType(long transaction) {
-            // TODO(proj4_part1): implement
+            // (proj4_part1): implement
             if (locks.isEmpty()) {
                 // no locks on this resource, return LockType.NL
                 return LockType.NL;
@@ -263,7 +263,7 @@ public class LockManager {
     public void acquireAndRelease(TransactionContext transaction, ResourceName name,
                                   LockType lockType, List<ResourceName> releaseNames)
             throws DuplicateLockRequestException, NoLockHeldException {
-        // TODO(proj4_part1): implement
+        // (proj4_part1): implement
         // You may modify any part of this method. You are not required to keep
         // all your code within the given synchronized block and are allowed to
         // move the synchronized block elsewhere if you wish.
@@ -320,7 +320,7 @@ public class LockManager {
      */
     public void acquire(TransactionContext transaction, ResourceName name,
                         LockType lockType) throws DuplicateLockRequestException {
-        // TODO(proj4_part1): implement
+        // (proj4_part1): implement
         // You may modify any part of this method. You are not required to keep all your
         // code within the given synchronized block and are allowed to move the
         // synchronized block elsewhere if you wish.
@@ -370,7 +370,7 @@ public class LockManager {
      */
     public void release(TransactionContext transaction, ResourceName name)
             throws NoLockHeldException {
-        // TODO(proj4_part1): implement
+        // (proj4_part1): implement
         // You may modify any part of this method.
         synchronized (this) {
 
@@ -409,7 +409,7 @@ public class LockManager {
     public void promote(TransactionContext transaction, ResourceName name,
                         LockType newLockType)
             throws DuplicateLockRequestException, NoLockHeldException, InvalidLockException {
-        // TODO(proj4_part1): implement
+        // (proj4_part1): implement
         // You may modify any part of this method.
         boolean shouldBlock = false;
         synchronized (this) {
