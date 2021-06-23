@@ -166,7 +166,7 @@ public class LockManager {
                 long txNum = request.transaction.getTransNum();
 
                 if (checkCompatible(lock.lockType, txNum)) {
-                    // grant the lock
+                    // grant or update the lock if compatible
                     grantOrUpdateLock(lock);
 
                     // the first request in the queue has been processed, remove it
