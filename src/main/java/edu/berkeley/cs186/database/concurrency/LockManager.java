@@ -104,7 +104,8 @@ public class LockManager {
         }
 
         /**
-         * Check if there is LockRequest waiting for this resource
+         * Check if there is LockRequest waiting on `name`.
+         * Self-added helper method.
          */
         public boolean waitingForResource(ResourceName name) {
             for (LockRequest lockRequest : waitingQueue) {
@@ -223,8 +224,8 @@ public class LockManager {
         return resourceEntries.get(name);
     }
 
-    /**
-     * Helper method to get the lock held by the transactin on a resource.
+    /** Self-added helper method
+     * Helper method to get the lock held by the transaction on a resource.
      * @return null if no such lock held.
      */
     private Lock getLock(long transactionNum, ResourceName name) {
@@ -351,7 +352,6 @@ public class LockManager {
                 // call prepareBlock to avoid race condition
                 transaction.prepareBlock();
             }
-
         }
         if (shouldBlock) {
             transaction.block();
@@ -373,7 +373,6 @@ public class LockManager {
         // (proj4_part1): implement
         // You may modify any part of this method.
         synchronized (this) {
-
             if (getLockType(transaction, name) == LockType.NL) {
                 // error checking
                 throw new NoLockHeldException("No lock on" +  name.toString()+  " is held by" +
@@ -445,7 +444,6 @@ public class LockManager {
                 // call prepareBlock to avoid race condition
                 transaction.prepareBlock();
             }
-
         }
         if (shouldBlock) {
             transaction.block();
