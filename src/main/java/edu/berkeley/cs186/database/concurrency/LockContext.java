@@ -215,12 +215,12 @@ public class LockContext {
      */
     private boolean hasSIXAncestor(TransactionContext transaction) {
         // (proj4_part2): implement
-        LockContext currParent = parent;
+        LockContext currParent = parentContext();
         while (currParent != null) {
             if (currParent.getExplicitLockType(transaction) == LockType.SIX) {
                 return true;
             }
-            currParent = currParent.parent;
+            currParent = currParent.parentContext();
         }
         return false;
     }
