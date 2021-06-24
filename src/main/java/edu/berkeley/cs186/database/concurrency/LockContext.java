@@ -189,7 +189,7 @@ public class LockContext {
      */
     public LockType getExplicitLockType(TransactionContext transaction) {
         if (transaction == null) return LockType.NL;
-        // TODO(proj4_part2): implement
+        // (proj4_part2): implement
         // getExplicitLockType only cares about the type of the lock that `transaction` holds at *this* level.
         // We just directly use the LockManager::getLockType to find out the result.
         return this.lockman.getLockType(transaction, name);
@@ -214,7 +214,7 @@ public class LockContext {
      * @return true if holds a SIX at an ancestor, false if not
      */
     private boolean hasSIXAncestor(TransactionContext transaction) {
-        // TODO(proj4_part2): implement
+        // (proj4_part2): implement
         LockContext currParent = parent;
         while (currParent != null) {
             if (currParent.getExplicitLockType(transaction) == LockType.SIX) {
