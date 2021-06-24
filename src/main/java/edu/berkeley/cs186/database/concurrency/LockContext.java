@@ -190,7 +190,9 @@ public class LockContext {
     public LockType getExplicitLockType(TransactionContext transaction) {
         if (transaction == null) return LockType.NL;
         // TODO(proj4_part2): implement
-        return LockType.NL;
+        // getExplicitLockType only cares about the type of the lock that `transaction` holds at *this* level.
+        // We just directly use the LockManager::getLockType to find out the result.
+        return this.lockman.getLockType(transaction, name);
     }
 
     /**
