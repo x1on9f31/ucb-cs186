@@ -406,4 +406,17 @@ public class TestLockContext {
         assertEquals(0, dbLockContext.getNumChildren(t1));
     }
 
+//    @Test
+//    @Category(PublicTests.class)
+//    public void myTestGetNumChildren() {
+//        LockContext tableContext = dbLockContext.childContext("table2");
+//        TransactionContext t1 = transactions[1];
+//        TransactionContext t2 = transactions[2];
+//
+//        dbLockContext.acquire(t1, LockType.IX);
+//        dbLockContext.acquire(t2, LockType.IS);
+//        tableContext.acquire(t1, LockType.IS);
+//        tableContext.acquire(t2, LockType.S);
+//        assertEquals(1, dbLockContext.getNumChildren(t1));
+//    }
 }

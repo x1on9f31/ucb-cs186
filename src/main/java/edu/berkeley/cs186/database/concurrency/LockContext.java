@@ -96,8 +96,33 @@ public class LockContext {
     public void acquire(TransactionContext transaction, LockType lockType)
             throws InvalidLockException, DuplicateLockRequestException {
         // TODO(proj4_part2): implement
+        long txNum = transaction.getTransNum();
+        LockType oldLockType = getExplicitLockType(transaction);
 
-        return;
+        if (this.readonly) {
+            throw new UnsupportedOperationException("This context is readonly!");
+        }
+        // check DuplicateLockRequest
+        if (lockman.getLockType(transaction, name) != LockType.NL) {
+            // the solution of xuzishuo is `lockman.getLockType(transaction, name) == lockType`
+            // but I think it should be LockType.NL;
+            throw new DuplicateLockRequestException("A lock is already held by the transaction.");
+        }
+
+        // check whether the request is invalid
+        if (!isValidAcquireRequest(transaction, lockType)) {
+            LockType parentLock = parentContext().getExplicitLockType(transaction);
+            throw new InvalidLockException("Can not acquire " + lockType + " with " + parentLock + " as its parents");
+        }
+
+        // acquire the lock
+        this.lockman.acquire(transaction, name, lockType);
+
+        // update numChildLocks
+        if (parentContext() != null) {
+            parentContext().numChildLocks.putIfAbsent(txNum, 0);
+            parentContext().numChildLocks.put(txNum, parentContext().getNumChildren(transaction) + 1);
+        }
     }
 
     /**
@@ -235,6 +260,25 @@ public class LockContext {
     private List<ResourceName> sisDescendants(TransactionContext transaction) {
         // TODO(proj4_part2): implement
         return new ArrayList<>();
+    }
+
+    /**
+     * Helper method to check whether the acquire lockType is valid
+     * @param   transaction the given transaction
+     *          lockType the requested locktype
+     * @return  {@code true} if the request is valid
+     *          otherwise, return {@code false}
+     */
+    private boolean isValidAcquireRequest(TransactionContext transaction, LockType lockType) {
+        if (parentContext() == null) {
+            return true;
+        }
+
+        if (!LockType.canBeParentLock(parentContext().getExplicitLockType(transaction), lockType)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**
