@@ -331,8 +331,26 @@ public class LockContext {
      */
     public LockType getEffectiveLockType(TransactionContext transaction) {
         if (transaction == null) return LockType.NL;
-        // TODO(proj4_part2): implement
-        return LockType.NL;
+        // (proj4_part2): implement
+        LockType explicitLock = getExplicitLockType(transaction);
+        if (explicitLock != LockType.NL) {
+            // the transaction has explicit lock on this level, return it.
+            return explicitLock;
+        }
+
+        LockContext currContext = parentContext();
+        while (currContext != null && explicitLock == LockType.NL) {
+            explicitLock = currContext.getExplicitLockType(transaction);
+            currContext = currContext.parentContext();
+        }
+
+        if (explicitLock == LockType.IS || explicitLock == LockType.IX) {
+            return LockType.NL;
+        } else if (explicitLock == LockType.SIX) {
+            return LockType.S;
+        } else {
+            return explicitLock;
+        }
     }
 
     /**
