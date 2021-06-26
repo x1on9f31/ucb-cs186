@@ -270,6 +270,21 @@ public class LockContext {
     }
 
     /**
+     * Helper method that returns the descendants of this context under this level.
+     * @param   transaction the given transaction
+     *
+     * @return  A list that contains the ResourceName of all the descendants of the given transaction
+     */
+    private List<ResourceName> getDescendants(TransactionContext transaction) {
+        List<ResourceName> descendants = new ArrayList<>();
+        for (Lock lock : lockman.getLocks(transaction)) {
+            if (lock.name.isDescendantOf(this.name)) {
+                descendants.add(lock.name);
+            }
+        }
+        return descendants;
+    }
+    /**
      * Escalate `transaction`'s lock from descendants of this context to this
      * level, using either an S or X lock. There should be no descendant locks
      * after this call, and every operation valid on descendants of this context
@@ -304,11 +319,46 @@ public class LockContext {
      */
     public void escalate(TransactionContext transaction) throws NoLockHeldException {
         // TODO(proj4_part2): implement
+        LockType currLockType = getExplicitLockType(transaction);
+        long transNum = transaction.getTransNum();
         if (readonly) {
             throw new UnsupportedOperationException("Can not escalate on a readonly context!");
         }
 
-        return;
+        if (currLockType == LockType.NL) {
+            throw new NoLockHeldException("The current transaction " + transNum + " has no lock at this level");
+        }
+
+
+        LockType escalateLock = LockType.S;
+//        List<ResourceName> descendants = getDescendants(transaction);
+        List<ResourceName> toReleaseDesc = new ArrayList<>();
+        for (Lock lock : lockman.getLocks(transaction)) {
+            if (lock.name.equals(this.name)) {
+                if (lock.lockType.equals(LockType.IX) || lock.lockType.equals(LockType.SIX)) {
+                    escalateLock = LockType.X;
+                } else if (lock.lockType.equals(LockType.S) || lock.lockType.equals(LockType.X)) {
+                    // prevent repetitive escalate
+                    return;
+                }
+            } else if (lock.name.isDescendantOf(this.name)) {
+                LockType childLockType = lock.lockType;
+                if (childLockType.equals(LockType.IX) || childLockType.equals(LockType.X) || childLockType.equals(LockType.SIX)) {
+                    escalateLock = LockType.X;
+                }
+                toReleaseDesc.add(lock.name);
+            }
+        }
+
+        if (escalateLock != currLockType && LockType.substitutable(escalateLock, currLockType)) {
+            lockman.promote(transaction, this.name, escalateLock); // promote the current lock
+            for (ResourceName toRelease : toReleaseDesc) {
+                // release all the descendant locks
+                lockman.release(transaction, toRelease);
+            }
+        }
+        // in escalate, we need to update the numChildLocks of this level, not the parent level.
+        numChildLocks.put(transNum, 0);
     }
 
     /**
