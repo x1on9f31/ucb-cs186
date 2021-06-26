@@ -646,7 +646,7 @@ public class QueryPlan {
             Map<Set<String>, QueryOperator> prevMap,
             Map<Set<String>, QueryOperator> pass1Map) {
         Map<Set<String>, QueryOperator> result = new HashMap<>();
-        // TODO(proj3_part2): implement
+        // (proj3_part2): implement
         // We provide a basic description of the logic you have to implement:
         // For each set of tables in prevMap
         //   For each join predicate listed in this.joinPredicates
@@ -727,7 +727,7 @@ public class QueryPlan {
      */
     public Iterator<Record> execute() {
         this.transaction.setAliasMap(this.aliases);
-        // TODO(proj3_part2): implement
+        // (proj3_part2): implement
         // Pass 1: For each table, find the lowest cost QueryOperator to access
         // the table. Construct a mapping of each table name to its lowest cost
         // operator.

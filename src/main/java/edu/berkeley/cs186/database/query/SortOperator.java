@@ -86,7 +86,7 @@ public class SortOperator extends QueryOperator {
      * iterator
      */
     public Run sortRun(Iterator<Record> records) {
-        // TODO(proj3_part1): implement
+        // (proj3_part1): implement
         // this method uses the *forEachRemaining* method that has been
         // added to the *Iterator* interface
         List<Record> recordList = new ArrayList<>();
@@ -112,7 +112,7 @@ public class SortOperator extends QueryOperator {
      */
     public Run mergeSortedRuns(List<Run> runs) {
         assert (runs.size() <= this.numBuffers - 1);
-        // TODO(proj3_part1): implement
+        // (proj3_part1): implement
         PriorityQueue<Pair<Record, Integer>> pq = new PriorityQueue(new RecordPairComparator());
         Run sortedRun = makeRun();
 
@@ -159,7 +159,7 @@ public class SortOperator extends QueryOperator {
      * @return a list of sorted runs obtained by merging the input runs
      */
     public List<Run> mergePass(List<Run> runs) {
-        // TODO(proj3_part1): implement
+        // (proj3_part1): implement
         if (runs.size() == 1) {
             return runs;
         }
@@ -186,7 +186,7 @@ public class SortOperator extends QueryOperator {
         // Iterator over the records of the relation we want to sort
         Iterator<Record> sourceIterator = getSource().iterator();
 
-        // TODO(proj3_part1): implement
+        // (proj3_part1): implement
 
         List<Run> sortedRuns = new ArrayList<>();
         while (sourceIterator.hasNext()) {

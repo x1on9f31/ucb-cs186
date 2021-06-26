@@ -318,7 +318,7 @@ public class LockContext {
      * @throws UnsupportedOperationException if context is readonly
      */
     public void escalate(TransactionContext transaction) throws NoLockHeldException {
-        // TODO(proj4_part2): implement
+        // (proj4_part2): implement
         LockType currLockType = getExplicitLockType(transaction);
         long transNum = transaction.getTransNum();
         if (readonly) {

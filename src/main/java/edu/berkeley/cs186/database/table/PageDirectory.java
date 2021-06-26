@@ -114,8 +114,13 @@ public class PageDirectory implements BacktrackingIterable<Page> {
 
         Page page = this.firstHeader.loadPageWithSpace(requiredSpace);
         LockContext pageContext = lockContext.childContext(page.getPageNum());
-        // TODO(proj4_part2): Update the following line
-        LockUtil.ensureSufficientLockHeld(pageContext, LockType.NL);
+        // (proj4_part2): check whether it should be LockType.X or LockType.IX
+        // 这里为什么xzishuo1996的解答选择了的LockType.X，getPageWithSpace不应该是是LockType.S吗？
+        // 答：When we modify a page, we'll almost always end up reading it first (acquiring IS/S locks)
+        // and then write back our updates to it afterwards (promoting to IX/X locks). If we know ahead of time
+        // that we're going to modify a page, we can skip the IS/S locks altogether by just acquiring IX/X locks
+        // to begin with. Modify the following methods to request the appropriate lock upfront:
+        LockUtil.ensureSufficientLockHeld(pageContext, LockType.X);
 
         return new DataPage(pageDirectoryId, page);
     }

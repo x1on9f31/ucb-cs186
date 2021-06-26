@@ -223,7 +223,7 @@ class LeafNode extends BPlusNode {
     @Override
     public Optional<Pair<DataBox, Long>> bulkLoad(Iterator<Pair<DataBox, RecordId>> data,
             float fillFactor) {
-        // TODO(proj2): implement
+        // (proj2): implement
 
         // 检查fillFactor的范围
         if (fillFactor < 0 || fillFactor > 1) {
@@ -263,7 +263,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.remove.
     @Override
     public void remove(DataBox key) {
-        // TODO(proj2): implement
+        // (proj2): implement
 
         int pos = keys.indexOf(key); // 找到需要删除的元素所在位置pos
         if (pos == -1) {

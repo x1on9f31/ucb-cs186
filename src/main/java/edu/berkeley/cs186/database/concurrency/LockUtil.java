@@ -42,8 +42,26 @@ public class LockUtil {
         LockType explicitLockType = lockContext.getExplicitLockType(transaction);
 
         // TODO(proj4_part2): implement
-        return;
+        if (LockType.substitutable(explicitLockType, requestType)) {
+            // case 1: the current lock type can effectively substitute the requested type
+            // we just leave it along.
+            return;
+        } else if (explicitLockType == LockType.IX && requestType == LockType.S) {
+            // case 2: the current lock type is IX and the requested lock is S
+            // maybe we should promote the current lock to SIX?
+            lockContext.promote(transaction, LockType.SIX);
+        } else if (explicitLockType.isIntent()) {
+            // case 3: the current lock type is intent
+
+        } else {
+            // case 4: none of above, explicit lock type is
+
+        }
     }
 
-    // TODO(proj4_part2) add any helper methods you want
+    // add any helper methods you want
+    /**
+     * Helper method that ensures you have the appropriate locks on all ancestors
+     */
+
 }

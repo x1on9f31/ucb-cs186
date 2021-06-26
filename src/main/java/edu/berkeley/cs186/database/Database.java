@@ -926,6 +926,8 @@ public class Database implements AutoCloseable {
         public void close() {
             try {
                 // TODO(proj4_part2)
+                // 释放该transaction持有的所有锁，注意我们需要按照粒度从细到粗的层级来释放锁，否则会产生错误！
+
                 return;
             } catch (Exception e) {
                 // There's a chance an error message from your release phase

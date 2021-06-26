@@ -25,7 +25,7 @@ public enum LockType {
         if (a == null || b == null) {
             throw new NullPointerException("null lock type");
         }
-        // TODO(proj4_part1): implement
+        // (proj4_part1): implement
         // it will be better to write this method using the table-driven approach
         switch (a) {
             case NL: return true;
@@ -65,7 +65,7 @@ public enum LockType {
         if (parentLockType == null || childLockType == null) {
             throw new NullPointerException("null lock type");
         }
-        // TODO(proj4_part1): implement
+        // (proj4_part1): implement
         switch (parentLockType) {
             case NL:
             case S:
