@@ -254,7 +254,6 @@ public class LockContext {
 
         // release all the S/IS locks on descendants and update the numChildLocks
         if ((oldLockType == LockType.IS || oldLockType == LockType.IX) && newLockType == LockType.SIX) {
-            LockContext parentContext = parentContext();
             List<ResourceName> sisDescendants = sisDescendants(transaction);
             sisDescendants.add(0, this.name);
 //            for (ResourceName sisDescendant : sisDescendants) {
@@ -267,9 +266,9 @@ public class LockContext {
             // we need to use acquire-and-release to free the S/IS descendants
             lockman.acquireAndRelease(transaction, name, newLockType, sisDescendants);
             for (ResourceName name : sisDescendants.subList(1, sisDescendants.size())) {
-                if (parentContext != null) {
-                    parentContext.numChildLocks.put(txNum, getNumChildren(transaction) - 1);
-                }
+                LockContext lockContext = LockContext.fromResourceName(lockman, name);
+                LockContext parentContext = lockContext.parentContext();
+                parentContext.numChildLocks.put(txNum, parentContext.numChildLocks.get(txNum) - 1);
             }
         } else {
             lockman.promote(transaction, name, newLockType);
@@ -371,8 +370,12 @@ public class LockContext {
             // we need to use the acquireAndRelease according to TestLockUtil
             lockman.acquireAndRelease(transaction, this.name, escalateLock, toReleaseDesc);
         }
-        // in escalate, we need to update the numChildLocks of this level, not the parent level.
-        numChildLocks.put(transNum, 0);
+        // in escalate, we need to update the numChildLocks
+        for (ResourceName name : toReleaseDesc) {
+            LockContext lockContext = LockContext.fromResourceName(lockman, name);
+            lockContext.numChildLocks.put(transNum, 0);
+        }
+        //numChildLocks.put(transNum, 0);
     }
 
     /**
