@@ -252,19 +252,27 @@ public class LockContext {
             throw new InvalidLockException("Can not promote " + oldLockType + " to " + newLockType);
         }
 
-        lockman.promote(transaction, name, newLockType);
-
         // release all the S/IS locks on descendants and update the numChildLocks
         if ((oldLockType == LockType.IS || oldLockType == LockType.IX) && newLockType == LockType.SIX) {
             LockContext parentContext = parentContext();
             List<ResourceName> sisDescendants = sisDescendants(transaction);
-            for (ResourceName sisDescendant : sisDescendants) {
-                // release all the S/IS descendants
-                lockman.release(transaction, sisDescendant);
+            sisDescendants.add(0, this.name);
+//            for (ResourceName sisDescendant : sisDescendants) {
+//                // release all the S/IS descendants
+//                lockman.release(transaction, sisDescendant);
+//                if (parentContext != null) {
+//                    parentContext.numChildLocks.put(txNum, getNumChildren(transaction) - 1);
+//                }
+//            }
+            // we need to use acquire-and-release to free the S/IS descendants
+            lockman.acquireAndRelease(transaction, name, newLockType, sisDescendants);
+            for (ResourceName name : sisDescendants.subList(1, sisDescendants.size())) {
                 if (parentContext != null) {
                     parentContext.numChildLocks.put(txNum, getNumChildren(transaction) - 1);
                 }
             }
+        } else {
+            lockman.promote(transaction, name, newLockType);
         }
 
     }
@@ -335,6 +343,9 @@ public class LockContext {
         List<ResourceName> toReleaseDesc = new ArrayList<>();
         for (Lock lock : lockman.getLocks(transaction)) {
             if (lock.name.equals(this.name)) {
+                // we need to add `this.name` to the release list since we use LockManager#acquireAndRelease
+                // later.
+                toReleaseDesc.add(this.name);
                 if (lock.lockType.equals(LockType.IX) || lock.lockType.equals(LockType.SIX)) {
                     escalateLock = LockType.X;
                 } else if (lock.lockType.equals(LockType.S) || lock.lockType.equals(LockType.X)) {
@@ -351,11 +362,14 @@ public class LockContext {
         }
 
         if (escalateLock != currLockType && LockType.substitutable(escalateLock, currLockType)) {
-            lockman.promote(transaction, this.name, escalateLock); // promote the current lock
-            for (ResourceName toRelease : toReleaseDesc) {
-                // release all the descendant locks
-                lockman.release(transaction, toRelease);
-            }
+            // 这里不知道为什么不能先promote再逐个release
+//            lockman.promote(transaction, this.name, escalateLock); // promote the current lock
+//            for (ResourceName toRelease : toReleaseDesc) {
+//                // release all the descendant locks
+//                lockman.release(transaction, toRelease);
+//            }
+            // we need to use the acquireAndRelease according to TestLockUtil
+            lockman.acquireAndRelease(transaction, this.name, escalateLock, toReleaseDesc);
         }
         // in escalate, we need to update the numChildLocks of this level, not the parent level.
         numChildLocks.put(transNum, 0);

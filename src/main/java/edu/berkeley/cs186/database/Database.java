@@ -26,6 +26,7 @@ import edu.berkeley.cs186.database.recovery.ARIESRecoveryManager;
 import edu.berkeley.cs186.database.recovery.DummyRecoveryManager;
 import edu.berkeley.cs186.database.recovery.RecoveryManager;
 import edu.berkeley.cs186.database.table.*;
+import edu.berkeley.cs186.database.table.Record;
 import edu.berkeley.cs186.database.table.stats.TableStats;
 
 import java.io.*;
@@ -925,10 +926,15 @@ public class Database implements AutoCloseable {
         @Override
         public void close() {
             try {
-                // TODO(proj4_part2)
+                // (proj4_part2)
                 // 释放该transaction持有的所有锁，注意我们需要按照粒度从细到粗的层级来释放锁，否则会产生错误！
-
-                return;
+                List<Lock> locks = lockManager.getLocks(this);
+                // 按bottom-up的方式来释放锁
+                Collections.reverse(locks);
+                for (Lock lock : locks) {
+                    LockContext lockContext = LockContext.fromResourceName(lockManager, lock.name);
+                    lockContext.release(this);
+                }
             } catch (Exception e) {
                 // There's a chance an error message from your release phase
                 // logic can get suppressed. This guarantees that the stack
