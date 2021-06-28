@@ -93,7 +93,16 @@ public class ARIESRecoveryManager implements RecoveryManager {
     @Override
     public long commit(long transNum) {
         // TODO(proj5): implement
-        return -1L;
+
+        TransactionTableEntry transactionTableEntry = transactionTable.get(transNum);
+        long prevLSN = transactionTableEntry.lastLSN;
+
+        CommitTransactionLogRecord commitRecord = new CommitTransactionLogRecord(transNum, prevLSN);
+        long commitLSN = logManager.appendToLog(commitRecord);
+        logManager.flushToLSN(commitLSN); // flush the log
+        transactionTableEntry.lastLSN = commitLSN;
+        transactionTableEntry.transaction.setStatus(Transaction.Status.COMMITTING);
+        return commitLSN;
     }
 
     /**
@@ -109,7 +118,15 @@ public class ARIESRecoveryManager implements RecoveryManager {
     @Override
     public long abort(long transNum) {
         // TODO(proj5): implement
-        return -1L;
+        long prevLSN = transactionTable.get(transNum).lastLSN;
+        AbortTransactionLogRecord abortRecord = new AbortTransactionLogRecord(transNum, prevLSN);
+        // append to log and get the abortLSN
+        long abortLSN =  logManager.appendToLog(abortRecord);
+        // update the transactionTable on lastLSN
+        transactionTable.get(transNum).lastLSN = abortLSN;
+        // set the status of the given transaction to ABORTING
+        transactionTable.get(transNum).transaction.setStatus(Transaction.Status.ABORTING);
+        return abortLSN;
     }
 
     /**
@@ -127,6 +144,13 @@ public class ARIESRecoveryManager implements RecoveryManager {
     @Override
     public long end(long transNum) {
         // TODO(proj5): implement
+        TransactionTableEntry transactionTableEntry = transactionTable.get(transNum);
+        long prevLSN = transactionTableEntry.lastLSN;
+
+        if (transactionTableEntry.transaction.getStatus() == Transaction.Status.ABORTING) {
+            // roll back to
+
+        }
         return -1L;
     }
 
