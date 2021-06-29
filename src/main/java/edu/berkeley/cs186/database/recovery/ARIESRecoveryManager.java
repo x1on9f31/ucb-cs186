@@ -152,13 +152,24 @@ public class ARIESRecoveryManager implements RecoveryManager {
         TransactionTableEntry transactionEntry = transactionTable.get(transNum);
         assert (transactionEntry != null);
 
-
         long prevLSN = transactionEntry.lastLSN;
         if (transactionEntry.transaction.getStatus() == Transaction.Status.ABORTING) {
-            // roll back to
-
+            // roll back to the first record of this transaction?
+            long targetLSN = prevLSN;
+            LogRecord targetRecord = logManager.fetchLogRecord(targetLSN);
+            while (targetRecord.getPrevLSN().isPresent() && targetRecord.getPrevLSN().get() != 0L) {
+                long pLSN = targetRecord.getPrevLSN().get();
+                if (targetRecord.getPrevLSN().get() < targetLSN) {
+                    targetLSN = pLSN;
+                }
+                targetRecord = logManager.fetchLogRecord(pLSN);
+            }
+            rollbackToLSN(transNum, targetLSN);
         }
-        return -1L;
+        transactionTable.remove(transNum);
+        long LSN = logManager.appendToLog(new EndTransactionLogRecord(transNum, prevLSN));
+        transactionEntry.transaction.setStatus(Transaction.Status.COMPLETE);
+        return LSN;
     }
 
     /**
@@ -186,6 +197,25 @@ public class ARIESRecoveryManager implements RecoveryManager {
         // back from the next record that hasn't yet been undone.
         long currentLSN = lastRecord.getUndoNextLSN().orElse(lastRecordLSN);
         // TODO(proj5) implement the rollback logic described above
+        while (currentLSN > LSN) {
+            LogRecord currentRecord = logManager.fetchLogRecord(currentLSN);
+            if (currentRecord.isUndoable()) {
+                // How to emit the CLR?
+                LogRecord CLR = currentRecord.undo(currentLSN);
+                lastRecordLSN = logManager.appendToLog(CLR);
+                CLR.redo(this, diskSpaceManager, bufferManager);
+            }
+
+            if (!currentRecord.getUndoNextLSN().isPresent()) {
+                if (!currentRecord.getPrevLSN().isPresent()) {
+                    break;
+                } else {
+                    currentLSN = currentRecord.getPrevLSN().get();
+                }
+            } else {
+                currentLSN = currentRecord.getUndoNextLSN().get();
+            }
+        }
     }
 
     /**
