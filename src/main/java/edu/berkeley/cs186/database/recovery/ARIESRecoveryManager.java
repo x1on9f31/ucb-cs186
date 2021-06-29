@@ -152,23 +152,16 @@ public class ARIESRecoveryManager implements RecoveryManager {
         TransactionTableEntry transactionEntry = transactionTable.get(transNum);
         assert (transactionEntry != null);
 
-        long prevLSN = transactionEntry.lastLSN;
+        long prevLSN = transactionTable.get(transNum).lastLSN;
         if (transactionEntry.transaction.getStatus() == Transaction.Status.ABORTING) {
             // roll back to the first record of this transaction?
-            long targetLSN = prevLSN;
-            LogRecord targetRecord = logManager.fetchLogRecord(targetLSN);
-            while (targetRecord.getPrevLSN().isPresent() && targetRecord.getPrevLSN().get() != 0L) {
-                long pLSN = targetRecord.getPrevLSN().get();
-                if (targetRecord.getPrevLSN().get() < targetLSN) {
-                    targetLSN = pLSN;
-                }
-                targetRecord = logManager.fetchLogRecord(pLSN);
-            }
-            rollbackToLSN(transNum, targetLSN);
+            prevLSN = rollbackToLSN(transNum, 0);
         }
+
         transactionTable.remove(transNum);
-        long LSN = logManager.appendToLog(new EndTransactionLogRecord(transNum, prevLSN));
         transactionEntry.transaction.setStatus(Transaction.Status.COMPLETE);
+
+        long LSN = logManager.appendToLog(new EndTransactionLogRecord(transNum, prevLSN));
         return LSN;
     }
 
@@ -189,7 +182,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
      * @param transNum transaction to perform a rollback for
      * @param LSN LSN to which we should rollback
      */
-    private void rollbackToLSN(long transNum, long LSN) {
+    private long rollbackToLSN(long transNum, long LSN) {
         TransactionTableEntry transactionEntry = transactionTable.get(transNum);
         LogRecord lastRecord = logManager.fetchLogRecord(transactionEntry.lastLSN);
         long lastRecordLSN = lastRecord.getLSN();
@@ -201,9 +194,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
             LogRecord currentRecord = logManager.fetchLogRecord(currentLSN);
             if (currentRecord.isUndoable()) {
                 // How to emit the CLR?
-                LogRecord CLR = currentRecord.undo(currentLSN);
-                lastRecordLSN = logManager.appendToLog(CLR);
-                CLR.redo(this, diskSpaceManager, bufferManager);
+                LogRecord clr = currentRecord.undo(lastRecordLSN);
+                lastRecordLSN = logManager.appendToLog(clr);
+                clr.redo(this, diskSpaceManager, bufferManager);
             }
 
             if (!currentRecord.getUndoNextLSN().isPresent()) {
@@ -216,6 +209,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
                 currentLSN = currentRecord.getUndoNextLSN().get();
             }
         }
+        return lastRecordLSN;
     }
 
     /**
@@ -266,7 +260,19 @@ public class ARIESRecoveryManager implements RecoveryManager {
         assert (before.length == after.length);
         assert (before.length <= BufferManager.EFFECTIVE_PAGE_SIZE / 2);
         // TODO(proj5): implement
-        return -1L;
+        TransactionTableEntry transactionEntry = transactionTable.get(transNum);
+        long prevLSN = transactionEntry.lastLSN;
+
+        LogRecord record = new UpdatePageLogRecord(transNum, pageNum, prevLSN, pageOffset, before, after);
+        long LSN = logManager.appendToLog(record);
+        // update transaction table
+        transactionEntry.lastLSN = LSN;
+        // update dirty page table, note that the dirtyPageTable is pageNum->recLSN
+        if (!dirtyPageTable.containsKey(pageNum)) {
+            // resLSN is the *first* LSN that dirties the page
+            dirtyPageTable.put(pageNum, LSN);
+        }
+        return LSN;
     }
 
     /**
