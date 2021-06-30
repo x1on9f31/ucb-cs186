@@ -930,41 +930,15 @@ public class Database implements AutoCloseable {
                 // the implementation in (https://bit.ly/3w5WqHI) seems to be slow.
                 // 释放该transaction持有的所有锁，注意我们需要按照粒度从细到粗的层级来释放锁，否则会产生错误！
                 List<Lock> locks = lockManager.getLocks(this);
-                // 按bottom-up的方式来释放锁
-                Set<LockContext> lockContexts = new HashSet<>();
-                if(locks != null && !locks.isEmpty()) {
-                    for(Lock lock : locks) {
-                        lockContexts.add(LockContext.fromResourceName(Database.this.lockManager, lock.name));
-                    }
-                    // find database lock context
-                    LockContext rootLockContext = null;
-                    for(LockContext lockContext : lockContexts) {
-                        if(lockContext.parentContext() == null) {
-                            rootLockContext = lockContext;
-                        }
-                    }
-                    // find the root of "lock tree"
-                    // BFS + Stack
-                    Stack<LockContext> stack = new Stack<>();
-                    Queue<LockContext> queue = new ArrayDeque<>();
-                    queue.add(rootLockContext);
-                    while(!queue.isEmpty()) {
-                        LockContext currLockContext = queue.poll();
-                        stack.push(currLockContext);
-                        List<LockContext> children = currLockContext.getChildren();
-                        if(children != null && !children.isEmpty()) {
-                            for(LockContext lockContext : children) {
-                                if(lockContexts.contains(lockContext)) {
-                                    queue.add(lockContext);
-                                }
-                            }
-                        }
-                    }
-                    // stack already contains reorder of locks
-                    while(!stack.empty()) {
-                        LockContext releaseLockContext = stack.pop();
-                        releaseLockContext.release(this);
-                    }
+                // 按bottom-up的方式来释放锁，本实现的想法是根据ResourceName的names长度来区分，先释放长度最长的，再释放长度短一些的
+                PriorityQueue<LockContext> priorityQueue = new PriorityQueue<>((a, b)->(b.getNamesSize() - a.getNamesSize()));
+                for (Lock lock : locks) {
+                    priorityQueue.add(LockContext.fromResourceName(lockManager, lock.name));
+                }
+
+                while (!priorityQueue.isEmpty()) {
+                    LockContext toRelease = priorityQueue.poll();
+                    toRelease.release(this);
                 }
             } catch (Exception e) {
                 // There's a chance an error message from your release phase

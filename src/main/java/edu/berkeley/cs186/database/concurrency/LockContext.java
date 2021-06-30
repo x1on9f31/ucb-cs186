@@ -536,6 +536,10 @@ public class LockContext {
         return childContexts;
     }
 
+    public int getNamesSize() {
+        return this.name.getNames().size();
+    }
+
     @Override
     public String toString() {
         return "LockContext(" + name.toString() + ")";
