@@ -66,13 +66,15 @@ public enum LockType {
             throw new NullPointerException("null lock type");
         }
         // (proj4_part1): implement
-        switch (parentLockType) {
-            case NL:
+        switch (childLockType) {
+            case NL: return true;
             case S:
-            case X: return childLockType == LockType.NL; // NL can only be parent of NL
-            case IX: return true;
-            case IS: return childLockType == NL || childLockType == IS || childLockType == S;
-            case SIX: return childLockType != IS && childLockType != S && childLockType != SIX; // this project disallow child of SIX also be SIX;
+            case IS: return parentLockType.equals(IS) || parentLockType.equals(IX);
+            case IX:
+            case X:
+                return parentLockType == IX || parentLockType == SIX;
+            case SIX:
+                return parentLockType == IX;
             default: throw new UnsupportedOperationException("bad lock type");
         }
     }

@@ -725,7 +725,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
      *   the pageLSN is checked, and the record is redone if needed.
      */
     void restartRedo() {
-        // TODO(proj5): implement
+        // (proj5): implement
         long redoLSN = Integer.MAX_VALUE;
         for (long recLSN : dirtyPageTable.values()) {
             if (recLSN < redoLSN) {
@@ -783,7 +783,46 @@ public class ARIESRecoveryManager implements RecoveryManager {
      */
     void restartUndo() {
         // TODO(proj5): implement
-        return;
+        PriorityQueue<Long> txnPQ = new PriorityQueue<>(Collections.reverseOrder());
+        for (TransactionTableEntry entry : transactionTable.values()) {
+            if (entry.transaction.getStatus() == Transaction.Status.RECOVERY_ABORTING) {
+                txnPQ.add(entry.lastLSN);
+            }
+        }
+
+        while (!txnPQ.isEmpty()) {
+            long lastLSN = txnPQ.poll();
+            LogRecord undoRecord = logManager.fetchLogRecord(lastLSN);
+
+            if (undoRecord.isUndoable()) {
+                long transNum = undoRecord.getTransNum().get();
+                TransactionTableEntry entry = transactionTable.get(transNum);
+                long prevLSN = entry.lastLSN;
+
+                LogRecord clr = undoRecord.undo(prevLSN);
+                long clrLSN = logManager.appendToLog(clr);
+                entry.lastLSN = clrLSN;
+                clr.redo(this, diskSpaceManager, bufferManager);
+            }
+
+            long newLSN;
+            if (undoRecord.getUndoNextLSN().isPresent()) {
+                newLSN = undoRecord.getUndoNextLSN().get();
+            } else {
+                newLSN = undoRecord.getPrevLSN().get();
+            }
+
+            if (newLSN == 0) {
+                // https://piazza.com/class/k5ecyhh3xdw1dd?cid=902_f80 says to avoid using end here YOLO
+                TransactionTableEntry entry = transactionTable.get(undoRecord.getTransNum().get());
+                entry.transaction.cleanup();
+                entry.transaction.setStatus(Transaction.Status.COMPLETE);
+                logManager.appendToLog(new EndTransactionLogRecord(entry.transaction.getTransNum(), entry.lastLSN));
+                transactionTable.remove(entry.transaction.getTransNum());
+            } else {
+                txnPQ.add(newLSN);
+            }
+        }
     }
 
     /**
@@ -829,7 +868,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
             if (entry.transaction.getStatus() == Transaction.Status.COMMITTING) {
                 // if the entry that are in the COMMITTING state, cleanup and end it.
                 entry.transaction.cleanup();
-                end(entry.transaction.getTransNum());
+                entry.transaction.setStatus(Transaction.Status.COMPLETE);
+                logManager.appendToLog(new EndTransactionLogRecord(entry.transaction.getTransNum(), entry.lastLSN));
+                transactionTable.remove(entry.transaction.getTransNum());
             } else if (entry.transaction.getStatus() == Transaction.Status.RUNNING) {
                 // if the transaction that are in RUNNING state, move it to RECOVERY_ABORTING
                 // and emit an abort record
