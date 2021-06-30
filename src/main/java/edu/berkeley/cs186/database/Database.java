@@ -926,14 +926,44 @@ public class Database implements AutoCloseable {
         @Override
         public void close() {
             try {
-                // (proj4_part2)
+                // TODO: project 4 part 2, only reverse the locks is not enough
                 // 释放该transaction持有的所有锁，注意我们需要按照粒度从细到粗的层级来释放锁，否则会产生错误！
                 List<Lock> locks = lockManager.getLocks(this);
                 // 按bottom-up的方式来释放锁
-                Collections.reverse(locks);
-                for (Lock lock : locks) {
-                    LockContext lockContext = LockContext.fromResourceName(lockManager, lock.name);
-                    lockContext.release(this);
+                Set<LockContext> lockContexts = new HashSet<>();
+                if(locks != null && !locks.isEmpty()) {
+                    for(Lock lock : locks) {
+                        lockContexts.add(LockContext.fromResourceName(Database.this.lockManager, lock.name));
+                    }
+                    // find database lock context
+                    LockContext rootLockContext = null;
+                    for(LockContext lockContext : lockContexts) {
+                        if(lockContext.parentContext() == null) {
+                            rootLockContext = lockContext;
+                        }
+                    }
+                    // find the root of "lock tree"
+                    // BFS + Stack
+                    Stack<LockContext> stack = new Stack<>();
+                    Queue<LockContext> queue = new ArrayDeque<>();
+                    queue.add(rootLockContext);
+                    while(!queue.isEmpty()) {
+                        LockContext currLockContext = queue.poll();
+                        stack.push(currLockContext);
+                        List<LockContext> children = currLockContext.getChildren();
+                        if(children != null && !children.isEmpty()) {
+                            for(LockContext lockContext : children) {
+                                if(lockContexts.contains(lockContext)) {
+                                    queue.add(lockContext);
+                                }
+                            }
+                        }
+                    }
+                    // stack already contains reorder of locks
+                    while(!stack.empty()) {
+                        LockContext releaseLockContext = stack.pop();
+                        releaseLockContext.release(this);
+                    }
                 }
             } catch (Exception e) {
                 // There's a chance an error message from your release phase

@@ -517,11 +517,23 @@ public class LockContext {
         return childContext(Long.toString(name));
     }
 
+
     /**
      * Gets the number of locks held on children a single transaction.
      */
     public int getNumChildren(TransactionContext transaction) {
         return numChildLocks.getOrDefault(transaction.getTransNum(), 0);
+    }
+
+    public List<LockContext> getChildren() {
+        // TODO: understand this method
+        List<LockContext> childContexts = new ArrayList<>();
+        if (this.children != null && !this.children.isEmpty()) {
+            for (Map.Entry<String, LockContext> entry : children.entrySet()) {
+                childContexts.add(entry.getValue());
+            }
+        }
+        return childContexts;
     }
 
     @Override

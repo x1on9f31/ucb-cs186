@@ -4,6 +4,7 @@ import edu.berkeley.cs186.database.TransactionContext;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 
 /**
  * LockUtil is a declarative layer which simplifies multigranularity lock
@@ -41,7 +42,10 @@ public class LockUtil {
                 // sufficient lock can substitute the original lock on parentContext, we promote the original lock
                 currContext.promote(transaction, sufficientType);
             } else {
-                // if get here, it means that the lock on this level is sufficient, do nothing.
+                if ((sufficientType.equals(LockType.IX) && currLock.equals(LockType.S)) ||
+                        (sufficientType.equals(LockType.S) && currLock.equals(LockType.IX))) {
+                    currContext.promote(transaction, LockType.SIX);
+                }
             }
         }
     }
