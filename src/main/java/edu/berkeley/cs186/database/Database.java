@@ -927,6 +927,7 @@ public class Database implements AutoCloseable {
         public void close() {
             try {
                 // TODO: project 4 part 2, only reverse the locks is not enough
+                // the implementation in (https://bit.ly/3w5WqHI) seems to be slow.
                 // 释放该transaction持有的所有锁，注意我们需要按照粒度从细到粗的层级来释放锁，否则会产生错误！
                 List<Lock> locks = lockManager.getLocks(this);
                 // 按bottom-up的方式来释放锁

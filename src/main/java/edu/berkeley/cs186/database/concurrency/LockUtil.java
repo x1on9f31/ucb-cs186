@@ -21,7 +21,7 @@ public class LockUtil {
     private static void ensureSufficientAncestorLockHeld(LockContext lockContext, TransactionContext transaction, LockType sufficientType) {
         LockContext parentContext = lockContext.parentContext();
         Deque<LockContext> ancestors = new ArrayDeque<>();
-
+        // TODO: check the logic of this function
         while (parentContext != null) {
             // we need to get to the top-level first and then start acquiring/promoting locks
             // so we use a stack to store the lock acquire/promote list.
