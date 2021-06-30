@@ -726,7 +726,48 @@ public class ARIESRecoveryManager implements RecoveryManager {
      */
     void restartRedo() {
         // TODO(proj5): implement
-        return;
+        long redoLSN = Integer.MAX_VALUE;
+        for (long recLSN : dirtyPageTable.values()) {
+            if (recLSN < redoLSN) {
+                redoLSN = recLSN;
+            }
+        }
+        // what if the restartRedo is called on an empty log?
+        // what is an empty log?
+        if (dirtyPageTable.isEmpty()) {
+            return;
+        }
+        Iterator<LogRecord> redoIterator = logManager.scanFrom(redoLSN);
+        while (redoIterator.hasNext()) {
+            LogRecord record = redoIterator.next();
+            LogType logType = record.getType();
+            if (record.isRedoable()) {
+                if (logType.equals(LogType.ALLOC_PART) || logType.equals(LogType.UNDO_ALLOC_PART) ||
+                        logType.equals(LogType.FREE_PART) || logType.equals(LogType.UNDO_FREE_PART)) {
+                    // always redo if log type is about a partition
+                    record.redo(this, diskSpaceManager, bufferManager);
+                } else if (logType.equals(LogType.ALLOC_PAGE) || logType.equals(LogType.UNDO_FREE_PAGE)) {
+                    record.redo(this, diskSpaceManager, bufferManager);
+                } else if (logType.equals(LogType.UPDATE_PAGE) || logType.equals(LogType.UNDO_UPDATE_PAGE) ||
+                        logType.equals(LogType.FREE_PAGE) || logType.equals(LogType.UNDO_ALLOC_PAGE)) {
+                    Page page = bufferManager.fetchPage(new DummyLockContext(), record.getPageNum().get());
+                    try {
+                        if (dirtyPageTable.containsKey(record.getPageNum().get())) {
+                            long pageLSN = page.getPageLSN();
+                            long pageNum = page.getPageNum();
+                            long recordLSN = record.getLSN();
+                            if (recordLSN>= dirtyPageTable.get(pageNum) && pageLSN < recordLSN) {
+                                // all the conditions meet, redo this record
+                                record.redo(this, diskSpaceManager, bufferManager);
+                            }
+                        }
+                    } finally {
+                        page.unpin();
+                    }
+                }
+            }
+
+        }
     }
 
     /**
