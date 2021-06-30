@@ -447,7 +447,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
         // All of the transaction's changes strictly after the record at LSN should be undone.
         long savepointLSN = transactionEntry.getSavepoint(name);
 
-        // TODO(proj5): implement
+        // (proj5): implement
         rollbackToLSN(transNum, savepointLSN);
     }
 
@@ -475,7 +475,35 @@ public class ARIESRecoveryManager implements RecoveryManager {
         Map<Long, Pair<Transaction.Status, Long>> chkptTxnTable = new HashMap<>();
 
         // TODO(proj5): generate end checkpoint record(s) for DPT and transaction table
+        // iterate through the DPT and transactionTable to generate end checkpoint records
+        Iterator<Map.Entry<Long, Long>> dptIterator = dirtyPageTable.entrySet().iterator();
+        Iterator<Map.Entry<Long, TransactionTableEntry>> txnTableIterator = transactionTable.entrySet().iterator();
+        while (true) {
+            // if add the next DPT entry or transactionTable entry will cause the end checkpoint record too large,
+            // append a end checkpoint record with the current chkptDPT and chkptTxnTable.
+            // Then clear the two tables and continue copying items until all the entries have been copied.
+            if (!EndCheckpointLogRecord.fitsInOneRecord(chkptDPT.size() + 1, chkptTxnTable.size()) ||
+                !EndCheckpointLogRecord.fitsInOneRecord(chkptDPT.size(), chkptTxnTable.size() + 1)) {
+                // append a new checkpoint record with current chkptDPT and chkptTxnTable
+                LogRecord record = new EndCheckpointLogRecord(chkptDPT, chkptTxnTable);
+                logManager.appendToLog(record);
+                // clear the existing table
+                chkptDPT.clear();
+                chkptTxnTable.clear();
+            }
 
+            if (dptIterator.hasNext()) {
+                Map.Entry<Long, Long> entry = dptIterator.next();
+                chkptDPT.put(entry.getKey(), entry.getValue());
+            } else if (txnTableIterator.hasNext()) {
+                Map.Entry<Long, TransactionTableEntry> entry = txnTableIterator.next();
+                Transaction.Status status = entry.getValue().transaction.getStatus();
+                long lastLSN = entry.getValue().lastLSN;
+                chkptTxnTable.put(entry.getKey(), new Pair<Transaction.Status, Long>(status, lastLSN));
+            } else {
+                break;
+            }
+        }
         // Last end checkpoint record
         LogRecord endRecord = new EndCheckpointLogRecord(chkptDPT, chkptTxnTable);
         logManager.appendToLog(endRecord);
