@@ -31,7 +31,8 @@ public class LockUtil {
 
         while (!ancestors.isEmpty()) {
             LockContext currContext = ancestors.pop();
-            LockType currLock = currContext.getExplicitLockType(transaction);
+            // here should be effective lock not explicit lock!!
+            LockType currLock = currContext.getEffectiveLockType(transaction);
             if (currLock == sufficientType) {
                 // already has the sufficientType, skip this level
                 continue;
