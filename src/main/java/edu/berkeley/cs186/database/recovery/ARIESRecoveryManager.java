@@ -734,9 +734,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
         }
         // what if the restartRedo is called on an empty log?
         // what is an empty log?
-        if (dirtyPageTable.isEmpty()) {
-            return;
-        }
+//        if (dirtyPageTable.isEmpty()) {
+//            return;
+//        }
         Iterator<LogRecord> redoIterator = logManager.scanFrom(redoLSN);
         while (redoIterator.hasNext()) {
             LogRecord record = redoIterator.next();
@@ -782,7 +782,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
      * - if the new LSN is 0, end the transaction and remove it from the queue and transaction table.
      */
     void restartUndo() {
-        // TODO(proj5): implement
+        // (proj5): implement
         PriorityQueue<Long> txnPQ = new PriorityQueue<>(Collections.reverseOrder());
         for (TransactionTableEntry entry : transactionTable.values()) {
             if (entry.transaction.getStatus() == Transaction.Status.RECOVERY_ABORTING) {
