@@ -628,7 +628,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
                     // Given Function<T, R> you can call .apply(T t) to get the returned R typed object.
                     // In this case, we can call newTransaction.apply(transNum) to get a new transaction for
                     // recovery purpose.
-                    transactionTable.put(transNum, new TransactionTableEntry(newTransaction.apply(transNum)));
+                    Transaction t = newTransaction.apply(transNum);
+                    startTransaction(t);
+                    transactionTable.put(transNum, new TransactionTableEntry(t));
                 }
                 // update the lastLSN of the transaction. a.k.a set the lastLSN of the transaction to the LSN of
                 // the record we are on.
@@ -642,7 +644,10 @@ public class ARIESRecoveryManager implements RecoveryManager {
                 long pageNum = logRecord.getPageNum().get();
                 if (logType == LogType.UPDATE_PAGE || logType == LogType.UNDO_UPDATE_PAGE) {
                     // update the dirtyPageTable, since they will dirty pages
-                    dirtyPageTable.put(pageNum, logRecord.getLSN());
+                    if (!dirtyPageTable.containsKey(pageNum)) {
+                        // should not directly update dirtyPageTable, will fail tests in TestDatabaseRecoveryIntegration
+                        dirtyPageTable.put(pageNum, logRecord.getLSN());
+                    }
                 } else if (logType == LogType.FREE_PAGE || logType == LogType.UNDO_ALLOC_PAGE) {
                     // these two types of change can be seen as flushing the freed page to disk
                     // remove from dirtyPageTable
@@ -691,7 +696,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
                     }
 
                     if (!transactionTable.containsKey(txnNum)) {
-                        transactionTable.put(txnNum, new TransactionTableEntry(newTransaction.apply(txnNum)));
+                        Transaction t = newTransaction.apply(txnNum);
+                        startTransaction(t);
+                        transactionTable.put(txnNum, new TransactionTableEntry(t));
                     }
                     // now we can safely get transactionTableEntry using the transaction number
                     TransactionTableEntry entry = transactionTable.get(txnNum);
@@ -736,9 +743,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
         }
         // what if the restartRedo is called on an empty log?
         // what is an empty log?
-        if (dirtyPageTable.isEmpty()) {
-            redoLSN = logManager.getFlushedLSN();
-        }
+//        if (dirtyPageTable.isEmpty()) {
+//            redoLSN = logManager.getFlushedLSN();
+//        }
         Iterator<LogRecord> redoIterator = logManager.scanFrom(redoLSN);
         while (redoIterator.hasNext()) {
             LogRecord record = redoIterator.next();

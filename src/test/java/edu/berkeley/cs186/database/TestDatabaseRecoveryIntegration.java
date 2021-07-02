@@ -453,40 +453,4 @@ public class TestDatabaseRecoveryIntegration {
         this.db.close();
         old.close();
     }
-
-    @Test
-    public void testRebootLarge() {
-        /**
-         * Simulates a database crash mid-transaction. In this case, T1 is a
-         * transaction that drops the `Students` table, but does not commit
-         * before the database is rebooted. T2 is a new transaction created
-         * after the database recovers, so it should be able to access the
-         * `Students` table as though it were never dropped at all.
-         */
-        List<Record> oldRecords = new ArrayList<>();
-        List<Record> newRecords = new ArrayList<>();
-
-        // Do a full scan of `Students`
-        try(Transaction t1 = db.beginTransaction()) {
-            t1.createTable(new Schema().add("int", Type.intType()), "ints1");
-            for (int j = 0; j < 4; j++) {
-                t1.insert("ints1", j);
-            }
-            Iterator<Record> record = t1.query("ints1").execute();
-            while (record.hasNext()) {
-                oldRecords.add(record.next());
-            }
-        }
-
-        // Note: T1 never commits!
-        Database old = this.db;
-        reloadDatabase(false);
-        try (Transaction t2 = db.beginTransaction()) {
-            Iterator<Record> records2 = t2.query("ints" + 1).execute();
-            while (records2.hasNext()) newRecords.add(records2.next());
-        }
-        assertEquals(oldRecords, newRecords);
-        this.db.close();
-        old.close();
-    }
 }
