@@ -632,7 +632,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
                 }
                 // update the lastLSN of the transaction. a.k.a set the lastLSN of the transaction to the LSN of
                 // the record we are on.
-                transactionTable.get(transNum).lastLSN = logRecord.getLSN();
+                if (transactionTable.get(transNum).lastLSN < logRecord.getLSN()) {
+                    transactionTable.get(transNum).lastLSN = logRecord.getLSN();
+                }
             }
 
             if (logRecord.getPageNum().isPresent()) {
@@ -734,9 +736,9 @@ public class ARIESRecoveryManager implements RecoveryManager {
         }
         // what if the restartRedo is called on an empty log?
         // what is an empty log?
-//        if (dirtyPageTable.isEmpty()) {
-//            return;
-//        }
+        if (dirtyPageTable.isEmpty()) {
+            redoLSN = logManager.getFlushedLSN();
+        }
         Iterator<LogRecord> redoIterator = logManager.scanFrom(redoLSN);
         while (redoIterator.hasNext()) {
             LogRecord record = redoIterator.next();
@@ -754,7 +756,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
                     try {
                         if (dirtyPageTable.containsKey(record.getPageNum().get())) {
                             long pageLSN = page.getPageLSN();
-                            long pageNum = page.getPageNum();
+                            long pageNum = record.getPageNum().get();
                             long recordLSN = record.getLSN();
                             if (recordLSN>= dirtyPageTable.get(pageNum) && pageLSN < recordLSN) {
                                 // all the conditions meet, redo this record
@@ -805,14 +807,14 @@ public class ARIESRecoveryManager implements RecoveryManager {
                 clr.redo(this, diskSpaceManager, bufferManager);
             }
 
-            long newLSN;
+            long undoNextLSN;
             if (undoRecord.getUndoNextLSN().isPresent()) {
-                newLSN = undoRecord.getUndoNextLSN().get();
+                undoNextLSN = undoRecord.getUndoNextLSN().get();
             } else {
-                newLSN = undoRecord.getPrevLSN().get();
+                undoNextLSN = undoRecord.getPrevLSN().get();
             }
 
-            if (newLSN == 0) {
+            if (undoNextLSN == 0) {
                 // https://piazza.com/class/k5ecyhh3xdw1dd?cid=902_f80 says to avoid using end here YOLO
                 TransactionTableEntry entry = transactionTable.get(undoRecord.getTransNum().get());
                 entry.transaction.cleanup();
@@ -820,7 +822,7 @@ public class ARIESRecoveryManager implements RecoveryManager {
                 logManager.appendToLog(new EndTransactionLogRecord(entry.transaction.getTransNum(), entry.lastLSN));
                 transactionTable.remove(entry.transaction.getTransNum());
             } else {
-                txnPQ.add(newLSN);
+                txnPQ.add(undoNextLSN);
             }
         }
     }
