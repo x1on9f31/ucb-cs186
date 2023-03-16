@@ -89,7 +89,8 @@ public class BNLJOperator extends JoinOperator {
             // (proj3_part1): implement
             if (this.leftSourceIterator.hasNext()) {
                 // 注意这里是getLeftSource().getSchema();
-                this.leftBlockIterator = QueryOperator.getBlockIterator(this.leftSourceIterator, BNLJOperator.this.getLeftSource().getSchema(),
+                this.leftBlockIterator = QueryOperator.getBlockIterator(this.leftSourceIterator,
+                        BNLJOperator.this.getLeftSource().getSchema(),
                         BNLJOperator.this.numBuffers-2); // maxPage=B-2, fetch up to B-2 pages
                 if (this.leftBlockIterator.hasNext()) {
                     leftBlockIterator.markNext();
