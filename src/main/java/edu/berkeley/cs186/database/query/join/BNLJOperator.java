@@ -113,8 +113,9 @@ public class BNLJOperator extends JoinOperator {
             // (proj3_part1): implement
             if (this.rightSourceIterator.hasNext()) {
                 // 注意这里是getRightSource().getSchema();
-                this.rightPageIterator = QueryOperator.getBlockIterator(this.rightSourceIterator, BNLJOperator.this.getRightSource().getSchema(),
-                                                                        1); // maxPage set to 1, cause only need to fetch 1 page;
+                this.rightPageIterator = QueryOperator.getBlockIterator(this.rightSourceIterator,
+                        BNLJOperator.this.getRightSource().getSchema(),
+                        1); // maxPage set to 1, cause only need to fetch 1 page;
                 if (rightPageIterator.hasNext()) {
                     rightPageIterator.markNext(); // 为什么都要markNext()呢？
                 }
